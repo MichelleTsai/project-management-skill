@@ -60,6 +60,17 @@ logic_map/
 ---
 以下是我的訪談筆記：
 【貼上訪談筆記】
+
+## Schema 驗證（新增）
+
+在對 `kickoff.md` 或 sample data 進行自動產出 report 之前，請務必先做 schema 驗證。驗證步驟（通用）：
+
+1. 取得 sample data（CSV 或 JSON）以及一份「預期欄位 schema」（JSON 格式，為欄位名稱清單或包含 fields 的物件）。
+2. 使用 `tools/validate_schema.py --schema schema.json --sample sample.json`（或 CSV）執行檢查。
+3. 若有差異（缺欄或多餘欄位），產生差異報告並標註為「待確認」，不要直接把未驗證的 sample 送入生產解析流程。
+4. 若 sample 欄位不完整，請向資料持有者請求補齊或提供欄位說明；若欄位頻繁變動，考慮實作版本化 schema 與變更通知流程。
+
+注意：此流程為通用驗證步驟，不包含任何專案或個人資訊。驗證成功後，才進入後續的 AI 產出步驟。
 ```
 
 ---
