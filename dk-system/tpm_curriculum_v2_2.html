@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPM × PM 精通課表</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #FAF8F4;
+    --surface: #FFFFFF;
+    --surface-2: #F4F1EB;
+    --border: #E5E0D6;
+    --text-primary: #1A1714;
+    --text-secondary: #5C5649;
+    --text-muted: #9C9486;
+    --accent: #2D6A4F;
+    --accent-light: #E8F4EE;
+    --accent-border: #B7D8C4;
+    --amber: #92540A;
+    --amber-light: #FEF3E2;
+    --amber-border: #F5C882;
+    --purple: #3C3489;
+    --purple-light: #EEEDFE;
+    --coral: #712B13;
+    --coral-light: #FAECE7;
+    --blue: #0C447C;
+    --blue-light: #E6F1FB;
+    --new: #854F0B;
+    --new-light: #FAEEDA;
+    --red: #991B1B;
+    --red-light: #FEF2F2;
+    --red-border: #FECACA;
+    --radius: 10px;
+  }
+  body { font-family: -apple-system, 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text-primary); line-height: 1.6; zoom: 1.44; }
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1.25rem 2rem; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .header h1 { font-size: 17px; font-weight: 600; }
+  .header-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .progress-wrap { display: flex; align-items: center; gap: 10px; }
+  .progress-bar { width: 140px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; }
+  .progress-label { font-size: 12px; color: var(--text-muted); }
+  .main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* weakness panel */
+  .weakness-panel { background: var(--red-light); border: 1.5px solid var(--red-border); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; }
+  .weakness-panel-title { font-size: 14px; font-weight: 700; color: var(--red); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .weakness-tracker-item { background: white; border: 1px solid var(--red-border); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+  .weakness-tracker-item:last-child { margin-bottom: 0; }
+  .weakness-tracker-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .weakness-tracker-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+  .status-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .status-improving { background: var(--accent-light); color: var(--accent); }
+  .status-ongoing { background: var(--red-light); color: var(--red); border: 1px solid var(--red-border); }
+  .status-new { background: var(--new-light); color: var(--new); }
+  .status-resolved { background: #DBEAFE; color: #1E40AF; }
+  .weakness-tracker-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.5; }
+  .weakness-timeline { display: flex; gap: 6px; flex-wrap: wrap; }
+  .weakness-day-pill { font-size: 11px; padding: 3px 9px; border-radius: 6px; background: var(--surface-2); color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
+  .weakness-day-pill.bad { background: var(--red-light); color: var(--red); }
+  .weakness-day-pill.good { background: var(--accent-light); color: var(--accent); }
+  .weakness-progress-note { font-size: 11px; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-style: italic; }
+
+  .summary { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; }
+  .summary-title { font-size: 13px; font-weight: 600; margin-bottom: 1rem; color: var(--text-secondary); }
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .summary-card { background: var(--surface-2); border-radius: 8px; padding: .75rem; text-align: center; }
+  .summary-num { font-size: 24px; font-weight: 700; color: var(--accent); }
+  .summary-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .legend { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .pill { display: inline-flex; align-items: center; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 999px; }
+  .p-tpm { background: var(--purple-light); color: var(--purple); }
+  .p-pm  { background: var(--accent-light); color: var(--accent); }
+  .p-ai  { background: var(--amber-light); color: var(--amber); }
+  .p-push { background: var(--coral-light); color: var(--coral); }
+  .p-boss { background: var(--blue-light); color: var(--blue); }
+  .p-dk { background: #FEF0EA; color: #993C1D; }
+  .p-new { background: var(--new-light); color: var(--new); }
+  .week-section { margin-bottom: 1.75rem; }
+  .week-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+  .week-desc { font-size: 12px; color: var(--text-secondary); margin-top: 3px; margin-bottom: 10px; }
+  .day-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
+  .day-card.is-new { border-left: 3px solid var(--amber); }
+  .day-card.is-done { border-color: var(--accent-border); background: #FAFDFB; }
+  .day-header { display: flex; align-items: flex-start; gap: 12px; padding: 1rem 1.25rem; cursor: pointer; user-select: none; transition: background .12s; }
+  .day-header:hover { background: var(--bg); }
+  .day-num { font-size: 11px; font-weight: 600; color: var(--text-muted); min-width: 48px; padding-top: 3px; flex-shrink: 0; }
+  .day-info { flex: 1; }
+  .day-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .day-title { font-size: 14px; font-weight: 600; }
+  .badge { font-size: 10px; font-weight: 600; border-radius: 4px; padding: 1px 6px; }
+  .badge-new { background: var(--new-light); color: var(--new); }
+  .badge-done { background: var(--accent-light); color: var(--accent); }
+  .day-sub { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+  .day-tags { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .day-chev { font-size: 13px; color: var(--text-muted); flex-shrink: 0; transition: transform .2s; margin-top: 3px; }
+  .day-card.open .day-chev { transform: rotate(180deg); }
+  .day-body { display: none; border-top: 1px solid var(--border); padding: 1.25rem; }
+  .day-card.open .day-body { display: block; }
+  .blocks { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
+  .block { background: var(--surface-2); border-radius: 8px; padding: .75rem 1rem; }
+  .block-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+  .block-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  .debrief-box { background: var(--blue-light); border: 1px solid #B5D4F4; border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1rem; }
+  .debrief-title { font-size: 12px; font-weight: 600; color: var(--blue); margin-bottom: 6px; }
+  .debrief-q { font-size: 12px; color: var(--blue); margin-bottom: 3px; padding-left: 14px; position: relative; }
+  .debrief-q::before { content: '→'; position: absolute; left: 0; }
+  .deliverable { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; color: var(--accent); background: var(--accent-light); border: 1px solid var(--accent-border); border-radius: 6px; padding: 4px 10px; margin-bottom: 1.25rem; }
+  .retro-section { border-top: 1px solid var(--border); padding-top: 1.25rem; }
+  .retro-title { font-size: 13px; font-weight: 600; margin-bottom: 1rem; }
+  .retro-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); background: var(--surface-2); border-radius: 6px; padding: 6px 12px; margin-bottom: 1rem; }
+  .retro-status.has-data { color: var(--accent); background: var(--accent-light); }
+  .rating-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+  .rating-label { font-size: 12px; color: var(--text-secondary); }
+  .stars { display: flex; gap: 3px; }
+  .star { font-size: 20px; color: var(--border); }
+  .star.active { color: #F59E0B; }
+  .retro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .retro-box { background: var(--surface-2); border-radius: 8px; padding: .75rem 1rem; }
+  .retro-box-good { border-left: 3px solid var(--accent); }
+  .retro-box-improve { border-left: 3px solid var(--red); background: var(--red-light); }
+  .retro-box-next { border-left: 3px solid var(--purple); margin-bottom: 10px; }
+  .retro-box-influence { border-left: 3px solid var(--coral); }
+  .retro-box-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  .retro-box-good .retro-box-label { color: var(--accent); }
+  .retro-box-improve .retro-box-label { color: var(--red); }
+  .retro-box-next .retro-box-label { color: var(--purple); }
+  .retro-box-influence .retro-box-label { color: var(--coral); }
+  .retro-content { font-size: 13px; color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap; }
+  .retro-content.is-improve { color: var(--red); font-weight: 500; }
+  .retro-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }
+  .milestone { background: var(--amber-light); border: 1px solid var(--amber-border); border-radius: var(--radius); padding: .75rem 1rem; margin-bottom: 8px; font-size: 13px; color: var(--amber); font-weight: 500; }
+  /* Toolbox */
+  .toolbox { background: var(--surface); border: 1.5px solid var(--purple-light); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; }
+  .toolbox-title { font-size: 14px; font-weight: 700; color: var(--purple); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .tool-card { background: var(--purple-light); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+  .tool-card:last-child { margin-bottom: 0; }
+  .tool-card-title { font-size: 13px; font-weight: 700; color: var(--purple); margin-bottom: .75rem; }
+  .tool-step { display: flex; gap: 10px; margin-bottom: 8px; align-items: flex-start; }
+  .tool-step-num { font-size: 11px; font-weight: 700; color: white; background: var(--purple); border-radius: 4px; padding: 2px 7px; flex-shrink: 0; margin-top: 1px; }
+  .tool-step-content { flex: 1; }
+  .tool-step-label { font-size: 12px; font-weight: 600; color: var(--purple); margin-bottom: 2px; }
+  .tool-step-body { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  .tool-formula { background: var(--purple); border-radius: 8px; padding: .75rem 1rem; margin-top: .75rem; font-size: 13px; font-weight: 500; color: white; text-align: center; }
+  .tool-example-table { width: 100%; border-collapse: collapse; margin-top: .75rem; font-size: 12px; }
+  .tool-example-table th { background: var(--purple); color: white; padding: 6px 10px; text-align: left; font-weight: 600; }
+  .tool-example-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
+  .tool-example-table tr:last-child td { border-bottom: none; }
+  .tool-tag { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: var(--purple); color: white; margin-left: 8px; vertical-align: middle; }
+  .checklist-step { background: white; border-radius: 8px; padding: .875rem 1rem; margin-bottom: 8px; border: 1px solid #E5E0FB; }
+  .checklist-step-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .checklist-step-badge { font-size: 12px; font-weight: 700; color: white; background: var(--purple); border-radius: 6px; padding: 3px 9px; flex-shrink: 0; }
+  .checklist-step-title { font-size: 13px; font-weight: 700; color: var(--purple); }
+  .checklist-items { list-style: none; padding-left: 4px; }
+  .checklist-items li { font-size: 12px; color: var(--text-secondary); padding: 4px 0 4px 24px; position: relative; line-height: 1.5; }
+  .checklist-items li::before { content: '☐'; position: absolute; left: 0; color: var(--purple); font-size: 14px; }
+  .mantra-bar { display: flex; justify-content: center; gap: 6px; margin: 1rem 0; }
+  .mantra-char { background: var(--purple); color: white; font-size: 16px; font-weight: 700; padding: 8px 14px; border-radius: 8px; }
+  .decision-q { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; padding: .6rem .9rem; background: var(--surface-2); border-radius: 8px; }
+  .scenario-block { background: white; border: 1px solid #E5E0FB; border-radius: 8px; padding: .9rem 1.1rem; margin-bottom: 8px; }
+  .scenario-label { display: inline-block; font-size: 11px; font-weight: 700; color: white; background: var(--purple); border-radius: 6px; padding: 3px 10px; margin-bottom: 8px; }
+  .scenario-condition { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-style: italic; }
+  .scenario-action-label { font-size: 11px; font-weight: 600; color: var(--purple); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+  .scenario-action-items { list-style: none; padding-left: 4px; }
+  .scenario-action-items li { font-size: 12px; color: var(--text-secondary); padding: 3px 0 3px 20px; position: relative; line-height: 1.5; }
+  .scenario-action-items li::before { content: '→'; position: absolute; left: 0; color: var(--purple); }
+  .scenario-script { background: var(--purple-light); border-radius: 6px; padding: .6rem .8rem; margin-top: 6px; font-size: 12px; color: var(--purple); line-height: 1.6; }
+
+  /* Collapsible weakness items */
+  .weakness-tracker-item { cursor: pointer; }
+  .weakness-tracker-body { display: none; margin-top: 8px; }
+  .weakness-tracker-item.open .weakness-tracker-body { display: block; }
+  .weakness-collapse-chev { font-size: 12px; color: var(--text-muted); transition: transform .2s; flex-shrink: 0; }
+  .weakness-tracker-item.open .weakness-collapse-chev { transform: rotate(180deg); }
+
+  /* Collapsible tool cards */
+  .tool-card { cursor: pointer; }
+  .tool-card-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .tool-card-body { display: none; margin-top: 10px; }
+  .tool-card.open .tool-card-body { display: block; }
+  .tool-collapse-chev { font-size: 12px; color: var(--text-muted); transition: transform .2s; flex-shrink: 0; }
+  .tool-card.open .tool-collapse-chev { transform: rotate(180deg); }
+
+  /* VP slide reference */
+  .vp-slide-card { background: var(--surface-2); border-radius: 12px; border: 0.5px solid var(--border); padding: 1.5rem 1.75rem; margin-top: 1rem; }
+  .vp-slide-bottomline { background: var(--accent-light); border-radius: var(--radius); padding: .9rem 1.1rem; margin: .75rem 0 1.1rem; }
+  .vp-slide-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.1rem; }
+  .vp-slide-stat { background: var(--surface); border-radius: var(--radius); padding: .9rem; text-align: center; }
+  .vp-slide-stat-num { font-size: 22px; font-weight: 700; color: var(--accent); }
+  .vp-slide-stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .vp-slide-section { margin-bottom: 1rem; }
+  .vp-slide-section-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
+  .vp-slide-warning { background: var(--amber-light); border-radius: var(--radius); padding: .9rem 1.1rem; margin-bottom: 1rem; }
+
+  @media (max-width: 600px) {
+    .main { padding: 1rem 1rem 3rem; }
+    .retro-grid { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .weakness-grid { grid-template-columns: 1fr; }
+    .header { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <h1>TPM × PM 精通課表</h1>
+      <div class="header-sub">Michelle · 美光 Senior Engineer · 每天 4.5 小時</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" style="width:34.375%"></div></div>
+      <div class="progress-label">11 / 32 完成</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Toolbox -->
+  <div class="toolbox">
+    <div class="toolbox-title">🧰 個人工具箱
+      <span style="font-size:11px;font-weight:400;color:var(--text-muted)">遇到狀況時，先找對應的顏色區塊</span>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem">
+      <span style="font-size:11px;padding:3px 10px;border-radius:999px;background:var(--purple-light);color:var(--purple);border:0.5px solid #C8C3F5">🟣 突發應對</span>
+      <span style="font-size:11px;padding:3px 10px;border-radius:999px;background:var(--accent-light);color:var(--accent);border:0.5px solid var(--accent-border)">🟢 影響力</span>
+      <span style="font-size:11px;padding:3px 10px;border-radius:999px;background:var(--amber-light);color:var(--amber);border:0.5px solid var(--amber-border)">🟡 需求溝通</span>
+      <span style="font-size:11px;padding:3px 10px;border-radius:999px;background:var(--blue-light);color:var(--blue);border:0.5px solid #8DC4EF">🔵 AI 工具</span>
+      <span style="font-size:11px;padding:3px 10px;border-radius:999px;background:#FAECE7;color:#993C1D;border:0.5px solid #F0997B">🟠 專案掌握</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:1.5rem" id="toolbox-grid"></div>
+
+    <div id="toolbox-detail" style="display:none;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-top:.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <div id="detail-title" style="font-size:14px;font-weight:600"></div>
+        <button onclick="closeDetail()" style="font-size:12px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:4px 8px">✕ 關閉</button>
+      </div>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+
+
+          <div id="curriculum"></div>
+</div>
+
+<script>
+const curriculum = [
+  {
+    week: "Week 1｜建立個人 AI 戰鬥力",
+    weekDesc: "先把自己練熟，才能帶別人",
+    days: [
+      {
+        id:"d1", day:"Day 1", isNew:false, done:true,
+        title:"回公司第一天：資訊大轟炸",
+        sub:"優先順序判斷 + 第一個 AI prompt 框架",
+        tags:[["p-tpm","TPM"],["p-ai","AI 技能"]],
+        blocks:[
+          {label:"早上 2hr｜沉浸情境", body:"同時收到三封緊急訊息，資訊不完整，你要自己問問題挖資料。用 AI 做重要性 × 緊急性矩陣，草擬今天行動清單。"},
+          {label:"下午 2hr｜技能拆解", body:"Prompt 基本框架：角色 + 任務 + 背景 + 格式 + 受眾 + 語言。練習五個不同任務各寫一個 prompt。"},
+          {label:"Debrief 30min｜影響力反思", body:"今天你做的事，誰是第一個受惠的人？如果要教給別人，你會怎麼設計這個學習過程？"}
+        ],
+        deliverable:"產出：今日行動清單 + 第一份 prompt 模板",
+        retro: {
+          rating: 4,
+          good: "短時間內建立資訊脈絡、主持跨團隊會議有效率、政治判斷成熟（Ray 的事私下問）、跟 David 溝通有效、prompt 框架四個任務越寫越好",
+          improve: "Bottom line 先說的習慣需要刻意練習\n帶人成長的意識需要加強，需要被引導才想到\nPrompt 任務描述不夠清楚，缺少目的和時間點\nPrompt 格式沒有包含所有想要的輸出項目",
+          next: "繼續練習 Bottom line 先說、加強把判斷邏輯說出來讓團隊看見",
+          influence: "帶動 Kevin + Ray 聚焦在 Theory 1、觸發 Jason 想到借 test chamber 的解法、讓 David 能立刻做決定"
+        }
+      },
+      {
+        id:"d2", day:"Day 2", isNew:false, done:true,
+        title:"Blocker 升級：風險評估與向上報告",
+        sub:"技術風險翻譯成主管聽得懂的語言",
+        tags:[["p-tpm","TPM"],["p-boss","主管關卡"],["p-ai","AI 技能"]],
+        blocks:[
+          {label:"早上 2hr｜角色扮演", body:"Theory 1+2 連動確認，10am brief 給 David。資訊不完整但主管要你給明確答案。"},
+          {label:"下午 2hr｜設計練習", body:"用 AI 整理會議摘要，準備給 David 的 brief 和給 Alex 的 email。練習 prompt 框架的實際應用。"},
+          {label:"Debrief 30min｜影響力反思", body:"今天帶動了誰？盟友關係如何主動經營？"}
+        ],
+        deliverable:"產出：風險評估 brief + 給 Alex 的 email + prompt 模板 v2",
+        retro: {
+          rating: 4,
+          good: "快速掌握 Theory 1+2 連動的技術狀況、給 David 樂觀+悲觀範圍而不是假的確定答案、處理 Ray 的政治情況不慌張、跟 David 確認角色的開場設計得很自然、跟 Alex 的 email 給了清楚的 checkpoint、prompt 框架應用越來越熟練",
+          improve: "主動讓盟友感覺被重視的意識不夠——需要被引導才想到去感謝 Ray\n影響力是雙向的思維需要加強\nBottom line 先說——Day 2 仍然出現同樣問題",
+          next: "Day 3 練習主動管理盟友關係、不等被引導就主動帶人成長",
+          influence: "Kevin 想到安全 test case 的平行推進策略、Ray 補充完整的 timeline 估算、David 能立刻決定 escalate 給 VP、Alex 得到清楚的狀況和 checkpoint、Ray 從潛在競爭者變成穩固的盟友"
+        }
+      },
+      {
+        id:"d3", day:"Day 3", isNew:false, done:true,
+        title:"跨團隊衝突 + 組織政治 + 帶人成長",
+        sub:"另一個團隊來搶資源，過程中發現有人暗中反對，你要帶著團隊一起解決",
+        tags:[["p-tpm","TPM"],["p-push","推動力"],["p-ai","AI 技能"]],
+        blocks:[
+          {label:"早上 2hr｜多角色衝突情境", body:"另一個團隊的 TPM 說這個 bug 也影響了他們，要求優先修他們那邊。你必須帶著 Ray 或 Kevin 一起面對，不能自己擋下來。過程中你會發現有人暗中在影響這個決定。"},
+          {label:"下午 2hr｜AI 工具 + 策略設計", body:"會議前用 AI 設計議程。會議後用 AI 整理記錄與 action items。同時用 AI 分析政治動機，設計應對策略和自我保護機制。"},
+          {label:"Debrief 30min｜三面向反思", body:"衝突調解做得如何？政治情境怎麼判斷？帶人成長有沒有做到？影響力如何擴散？"}
+        ],
+        deliverable:"產出：會議議程模板 + 會議記錄模板 + 組織政治應對 SOP",
+        retro: {
+          rating: 4,
+          good: "主動帶 Ray 進 David 的會議、設計防火牆機制讓 Ray + Kevin 知道怎麼回應 Marcus、主動感謝 Ray 建立雙向關係、約 Brian 來分享經驗並帶團隊一起參與、發現 fix 早就存在時反應成熟不追究、幫 Marcus 找到自己的解法不動用自己資源、Bottom line 先說比前兩天更自然",
+          improve: "準備會議時要同時想好 B 計畫 整理脈絡的能力需要繼續練習讓它變成本能",
+          next: "繼續練習在行動之前先整理脈絡、加強B 計畫思維：任何計畫都要想好如果不成功怎麼辦",
+          influence: "指揮 Ray + Kevin 事先整理資料、盡快 contact Brian、讓原本 10 天的修復縮短到 2–3 天、同時幫 Marcus 找到自己的解法、Kevin + Ray 從看不到盡頭變成看到一道光"
+        }
+      },
+      {
+        id:"d4", day:"Day 4", isNew:false, done:true,
+        title:"系統性思考 + 向上報告 + VP Present",
+        sub:"從修一個 bug 到推動流程改善，並第一次站上 VP 會議",
+        tags:[["p-tpm","TPM"],["p-push","推動力"],["p-boss","主管關卡"],["p-ai","AI 技能"]],
+        blocks:[
+          {label:"早上 2hr｜系統性發現", body:"Bug 已解決，但發現根本原因是 validation environment 沒有 sync master code。從技術問題提升到流程改善的思考層次。"},
+          {label:"中午｜VP Brief 準備", body:"David 臨時邀請進 VP 11am 的會議，20 分鐘準備一頁式報告，練習 Bottom line 先說的高層報告格式。"},
+          {label:"下午｜VP Present + 應變", body:"第一次站上 VP 會議，被問「為什麼沒人早點發現」這個尖銳問題，現場學習並應用情境判斷的回應技巧。"}
+        ],
+        deliverable:"產出：VP 一頁式報告模板 + 「為什麼沒人發現」應對框架",
+        retro: {
+          rating: 4,
+          good: "快速判斷主線任務和次要任務的優先順序、從技術 bug 提升到系統性流程改善的思考、準備 VP 投影片時用 Bottom line 先說、被問尖銳問題時能現場學習並用出來、VP 給予正面評價並認可思考方式",
+          improve: "往上報告好消息時忘記公開提到 Kevin 的功勞\n面對「為什麼沒人發現」這類問題的應變速度可以更快（但這是第一次遇到，學習曲線正常）",
+          next: "練習往上報告前固定檢查「誰的名字該被提到」、持續累積「被問尖銳問題」的應對情境，增加熟練度",
+          influence: "推動了系統性的流程改善（validation pipeline 自動檢查機制）、影響範圍可能擴散到所有使用此 pipeline 的團隊、在 VP 面前建立了信任，為未來的提案鋪路"
+        }
+      },
+      {
+        id:"d5", day:"Day 5", isNew:false, done:true,
+        title:"Week 1 整合：把工具箱全部用一次",
+        sub:"David 突然要你交一份給更高層 Director 的 Week 1 總結，把五個工具箱工具全部實際套用",
+        tags:[["p-tpm","TPM"],["p-ai","AI 技能"]],
+        blocks:[
+          {label:"早上 2hr｜整合練習", body:"情境：David 突然說明天要交一份完整的「Week 1 總結」給更高層的 Director。你需要：① 用「突發資訊」工具整理這週所有原始資料 ② 用「往上報告記得點名」工具確保 Kevin、Ray、Brian 的貢獻都被寫進去 ③ 用「影響力判斷」工具把這週四種類型的影響力標出來 ④ 用「VP 報告模板」工具把整份報告壓縮成一頁式格式"},
+          {label:"下午 1hr｜Week 1 真實 Debrief", body:"回顧這五天，問自己：這五個工具，哪個已經用得很順？哪個還是需要翻出來看才會用？有沒有少了一個工具，是這週讓你覺得「如果早知道就好了」？"}
+        ],
+        deliverable:"產出：給 Director 的 Week 1 總結（一頁式）+ 工具箱使用心得",
+        milestone:"里程碑：五個工具箱工具完成第一次完整實戰測試",
+        retro: {
+          rating: 4,
+          good: "把工具箱五個工具全部實際套用一遍、Week 1 總結報告結構清楚有底線先說有點名團隊貢獻、主動發現背景可以改成流水帳讓 prompt 更精簡、理解流水帳不應該存在 AI 對話裡要獨立存放",
+          improve: "收到突發資訊時先想清楚再行動還不夠本能，收到消息時第一反應還是只想到一個面向，需要刻意練習先問自己知道什麼不知道什麼",
+          next: "每次收到新訊息先默唸這兩個問題再回應，觀察 Week 2 是否有改善",
+          influence: "系統型：建立了完整的流水帳習慣和週報 prompt 系統、教會型（延遲觸發）：回公司後分享給團隊，影響力才會真正發生"
+        }
+      }
+    ]
+  },
+  {
+    week: "Week 2｜PM 決策思維 + 開始思考團隊",
+    weekDesc: "從個人執行者轉型為決策者",
+    days: [
+      { id:"d6", day:"Day 6", isNew:false, done:true, title:"緊急插單：Scope 管理與 RICE 排序", sub:"管理層突然要求 dashboard，先問動機再評估，發現 Excel 就夠了", tags:[["p-tpm","TPM"],["p-pm","PM"],["p-ai","AI 技能"]], blocks:[{label:"早上 2hr｜突發情境", body:"David 要求評估 real-time monitoring dashboard。先問清楚 PO 是誰、需求是什麼，才去評估 effort。發現 Sarah 真正需要的是資訊，不是 dashboard，Excel 就能解決。"},{label:"下午 2hr｜RICE 排序練習", body:"把 dashboard 的五個功能用 RICE 框架排優先順序。學習：數字給你起點，但最終判斷還是需要你從 stakeholder 的話裡抓到最重要的線索。"},{label:"Debrief 30min", body:"討論影響力如何自然發生：養成三個思維習慣——先問動機、帶人一起、點名貢獻者。"}], deliverable:"產出：RICE 排序模板 + 需求釐清問題清單", retro:{rating:4, good:"事先想到要先問動機再評估 effort、發現 Excel 可以取代 dashboard 節省開發資源、用 Bottom line 先說跟 David 溝通、RICE 排序法第一次實際操作、條件式計畫", improve:"開需求會議時要主動找最終目的句、RICE 排序後的判斷還是需要被提醒，要自己練習從 stakeholder 的話裡抓到最重要的線索", next:"下次開需求會議主動把最終目的句記下來，觀察 Day 7 是否能自己抓到", influence:"連結型：把 Sarah 的真實需求和 Excel 解法連結，避免不必要開發、信任型：讓 Sarah 和 David 對你的判斷力建立更深的信任"} },
+      { id:"d7", day:"Day 7", isNew:false, done:true, title:"PRD 寫作：從模糊需求到清晰文件", sub:"用 HBM3E dashboard 真實案例練習 PRD，學會腦袋有畫面時如何轉成文字", tags:[["p-pm","PM"],["p-ai","AI 技能"]], blocks:[{label:"早上 2hr｜PRD 練習", body:"寫 HBM3E validation dashboard 的 PRD。從背景與目的、目標使用者、功能需求（Phase 1/2/3），到非功能需求、Not in scope、成功指標，完整走一遍。"},{label:"下午 2hr｜PRD 技巧討論", body:"學習：腦袋有畫面但說不出來時，先用口語說給 AI 聽，AI 幫你整理成條列式格式，你再審閱修改。判斷力比產出格式更重要。"},{label:"Debrief 30min", body:"發現最終目的句的能力開始內化，今天不需要提醒就自己從 Sarah 的話裡抓到了。"}], deliverable:"產出：HBM3E dashboard PRD 草稿 + PRD 寫作 SOP", retro:{rating:3, good:"從 Sarah 的話裡自己抓到最終目的句不需要提醒、發現 Excel 可以取代 dashboard 節省工程資源、PRD 的 Why/Who/What 三個核心欄位填得清楚、知道什麼時候該自己做什麼時候用 AI 加速", improve:"PRD 功能需求的描述偏流水帳需要練習用條列式表達、要相信自己的描述已經夠好了不要低估自己", next:"練習審閱 AI 整理的 PRD 判斷工程師看到這個知道要做什麼嗎", influence:"系統型：設計 Excel 報表結構 Ray 之後維護、系統型：寫了 dashboard PRD tapeout 後工程師按照這份文件開發"} },
+      { id:"d8", day:"Day 8", isNew:false, done:true, title:"技術翻譯：同一份 spec 寫給三種受眾", sub:"學會分析受眾需求，用一個 prompt 同時產出三個版本，並審閱 AI 腦補的內容", tags:[["p-tpm","TPM"],["p-ai","AI 技能"]], blocks:[{label:"早上 2hr｜改寫練習", body:"把 HBM3E test chamber spec 改寫給 Kevin、Sarah、Leadership Meeting 三個版本。學習：告訴 AI 不要寫什麼跟要寫什麼一樣重要。"},{label:"下午 2hr｜受眾設定模板設計", body:"設計可以給團隊用的受眾設定 prompt 模板。同時把所有 prompt 工具整合成一個 Prompt 工具包，按報告類和文件類分類。"},{label:"Debrief 30min", body:"今天最重要的學習：永遠審閱 AI 的輸出，特別是它自己補充但原始資料沒有的資訊。"}], deliverable:"產出：受眾設定 prompt 模板 + Prompt 工具包整合", retro:{rating:4, good:"自己分析三個受眾的關注點和不需要知道的資訊、prompt 裡加了不在意的欄位讓 AI 產出更精準、發現 AI 自行補充了 timeline 資訊並主動修正", improve:"要養成審閱 AI 輸出的習慣，特別是數字和它自己推斷的內容", next:"Day 9 工具複習時，把受眾設定模板也納入測試", influence:"系統型：設計了可以給團隊用的受眾設定模板，任何人都能套用"} },
+      { id:"d9", day:"Day 9", isNew:false, done:true, title:"高壓決策 + 向上管理 + 工具箱複習", sub:"一個連貫情境練兩個技能，下午用六個情境測試所有工具", tags:[["p-pm","PM"],["p-boss","主管關卡"],["p-ai","AI 技能"],["p-push","推動力"]], blocks:[{label:"早上 2hr｜連貫情境", body:"你做了一個 Continue/Pivot/Kill 的高壓決策 → 主管點頭了 → 但主管的主管否決了 → 你要想辦法推進。一個情境同時練高壓決策和向上管理。"},{label:"下午 2hr｜工具箱總複習", body:"我給你六個情境，每個對應一個工具箱工具。你說「這個情境我會用哪個工具、怎麼用」。不提示你答案，全靠主動回憶。這是 Day 10 壓力測試的暖身。"},{label:"Debrief 30min", body:"今天的工具複習，哪幾個你答得很快？哪幾個需要想一下？這就是你 Day 10 要特別注意的地方。"}], deliverable:"產出：決策框架 prompt 模板 + 工具箱複習評分", retro:{rating:3.5, good:"高壓決策邏輯清楚（A+B 都做先上 A）、主動發現停機通知不該由自己處理並推回 Infra team、Sarah 的加速需求直接用現有 Excel 解決、工具複習 4/6 主動答對、主動發現工具箱兩個地方缺範例並要求補上", improve:"最終目的句沒有第一時間想到、思維習慣類工具比較抽象遇到情境不容易對應", next:"Day 10 壓力測試特別注意最終目的句和思維習慣類工具的應用", influence:"連結型：把停機通知推回 Infra team（讓對的人做對的事）、連結型：把 Sarah 的需求連結到已有的 Excel 避免不必要開發"} },
+      
+      { id:"d10", day:"Day 10", isNew:false, done:true, title:"工具箱壓力測試：董事會前夜", sub:"週四晚上 6:30pm，David 打電話說明天 9am 你要對董事會報告，14 小時準備時間", tags:[["p-tpm","TPM"],["p-pm","PM"],["p-ai","AI 技能"],["p-boss","主管關卡"]], blocks:[{label:"全天｜壓力測試情境", body:"你要在 14 小時內，獨立運用工具箱裡所有工具，準備一份讓董事會印象深刻的 10 分鐘報告。中途有突發狀況、資訊不完整、隱藏政治陷阱、以及真實的時間壓力。"},{label:"四個加強元素", body:"① 中途突發狀況：Kevin bug 回報、Marcus fix 又出問題、CEO 臨時加入。② 資訊不完整：你要自己問我要資料，可能前後矛盾需要判斷。③ 隱藏政治陷阱：董事會裡有一個人跟這個專案有關係，你不知道是什麼。④ 時間壓力：每個決定我告訴你現在幾點，你感受到時間在流逝。"},{label:"評分規則", body:"我不提示你用哪個工具，你要自己判斷。主動用對工具 2分、被提示後用對 1分、沒用到 0分。最後統計你主動用對幾個工具，知道哪些已經內化、哪些還需要練。"},{label:"工具路線圖（開始前先看這個）", html:`<svg width="100%" viewBox="0 0 680 780" role="img" style="margin-top:8px"><title>Day 10 工具路線圖</title><defs><marker id="arr10" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text font-family="inherit" font-size="14" font-weight="500" fill="var(--text-primary)" x="340" y="24" text-anchor="middle">Day 10 工具路線圖｜收到通知 → 完成報告</text>
+<rect x="30" y="52" width="12" height="12" rx="2" fill="#D85A30"/><text font-family="inherit" font-size="12" fill="var(--text-secondary)" x="48" y="62">突發應對</text>
+<rect x="150" y="52" width="12" height="12" rx="2" fill="#378ADD"/><text font-family="inherit" font-size="12" fill="var(--text-secondary)" x="168" y="62">AI 工具</text>
+<rect x="240" y="52" width="12" height="12" rx="2" fill="#1D9E75"/><text font-family="inherit" font-size="12" fill="var(--text-secondary)" x="258" y="62">影響力</text>
+<rect x="330" y="52" width="12" height="12" rx="2" fill="#BA7517"/><text font-family="inherit" font-size="12" fill="var(--text-secondary)" x="348" y="62">需求溝通</text>
+<rect x="440" y="52" width="12" height="12" rx="2" fill="#534AB7"/><text font-family="inherit" font-size="12" fill="var(--text-secondary)" x="458" y="62">向上管理</text>
+<g><rect x="30" y="82" width="620" height="54" rx="8" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/><text font-family="inherit" font-size="13" font-weight="500" fill="#712B13" x="340" y="104" text-anchor="middle">階段一：收到通知，先想清楚再行動</text><text font-family="inherit" font-size="11" fill="#993C1D" x="340" y="124" text-anchor="middle">⚡ 突發資訊工具｜六個問題：現在知道什麼？不知道什麼？影響多大？</text></g>
+<line x1="340" y1="136" x2="340" y2="156" stroke="#999" stroke-width="1.5" marker-end="url(#arr10)" fill="none"/>
+<g><rect x="30" y="156" width="620" height="54" rx="8" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/><text font-family="inherit" font-size="13" font-weight="500" fill="#0C447C" x="340" y="178" text-anchor="middle">階段二：整理流水帳，用 AI 產出報告初稿</text><text font-family="inherit" font-size="11" fill="#185FA5" x="340" y="198" text-anchor="middle">📒 每日流水帳 + ✨ Prompt 工具包「一頁式報告」</text></g>
+<line x1="340" y1="210" x2="340" y2="230" stroke="#999" stroke-width="1.5" marker-end="url(#arr10)" fill="none"/>
+<g><rect x="30" y="230" width="620" height="54" rx="8" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/><text font-family="inherit" font-size="13" font-weight="500" fill="#712B13" x="340" y="252" text-anchor="middle">階段三：中途突發狀況（Kevin / Marcus / CEO 臨時加入）</text><text font-family="inherit" font-size="11" fill="#993C1D" x="340" y="272" text-anchor="middle">⚡ 突發資訊工具再次啟動｜判斷：這個影響報告內容嗎？</text></g>
+<rect x="80" y="296" width="230" height="40" rx="6" fill="#F1EFE8" stroke="#D3D1C7" stroke-width="0.5"/><text font-family="inherit" font-size="11" fill="#444441" x="195" y="311" text-anchor="middle">影響 →</text><text font-family="inherit" font-size="11" fill="#444441" x="195" y="327" text-anchor="middle">更新報告初稿</text>
+<rect x="370" y="296" width="230" height="40" rx="6" fill="#F1EFE8" stroke="#D3D1C7" stroke-width="0.5"/><text font-family="inherit" font-size="11" fill="#444441" x="485" y="311" text-anchor="middle">不影響 →</text><text font-family="inherit" font-size="11" fill="#444441" x="485" y="327" text-anchor="middle">繼續準備，不需要理會</text>
+<line x1="340" y1="336" x2="340" y2="356" stroke="#999" stroke-width="1.5" marker-end="url(#arr10)" fill="none"/>
+<g><rect x="30" y="356" width="620" height="54" rx="8" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/><text font-family="inherit" font-size="13" font-weight="500" fill="#0F6E56" x="340" y="378" text-anchor="middle">階段四：準備報告，記得點名團隊貢獻</text><text font-family="inherit" font-size="11" fill="#1D9E75" x="340" y="398" text-anchor="middle">🏆 點名功勞工具｜問自己：誰的名字該被提到？什麼影響力類型？</text></g>
+<line x1="340" y1="410" x2="340" y2="430" stroke="#999" stroke-width="1.5" marker-end="url(#arr10)" fill="none"/>
+<g><rect x="30" y="430" width="620" height="54" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/><text font-family="inherit" font-size="13" font-weight="500" fill="#3C3489" x="340" y="452" text-anchor="middle">階段五：政治陷阱——董事會有人跟專案有關係</text><text font-family="inherit" font-size="11" fill="#534AB7" x="340" y="472" text-anchor="middle">💬 被問「為什麼沒人發現」→ 承認現況 → 系統問題 → 轉向解法</text></g>
+<line x1="340" y1="484" x2="340" y2="504" stroke="#999" stroke-width="1.5" marker-end="url(#arr10)" fill="none"/>
+<g><rect x="140" y="504" width="400" height="54" rx="8" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/><text font-family="inherit" font-size="13" font-weight="500" fill="#0F6E56" x="340" y="526" text-anchor="middle">✅ 報告完成！</text><text font-family="inherit" font-size="11" fill="#1D9E75" x="340" y="546" text-anchor="middle">主動用對工具 2分 / 被提示 1分 / 沒用到 0分</text></g>
+<rect x="30" y="572" width="620" height="36" rx="6" fill="#FEF3E2" stroke="#F5C882" stroke-width="0.5"/><text font-family="inherit" font-size="11" fill="#633806" x="340" y="594" text-anchor="middle">⚠️ 重要：我不會提示你用哪個工具，你要自己判斷。看完這個路線圖再開始！</text>
+</svg>`, body:""}], deliverable:"產出：董事會 10 分鐘報告 + 工具箱使用評分報告", milestone:"里程碑：工具箱壓力測試完成", retro:{
+  rating:4,
+  good:"突發資訊工具兩次都主動用對（收到通知 + FC-02 延誤）、Prompt 工具包完整跑了兩次、政治陷阱沒有站邊沒有評論早期決策、及時告知 David 讓對的人處理對的事、流水帳習慣的重要性有深刻體會",
+  improve:"Bottom line 先說需要提示才做到、點名功勞需要提示才想到、傳給 David 的訊息第一句不夠直接",
+  next:"Day 11 開始 DK 系統練習，流水帳習慣從現在開始每天執行",
+  influence:"連結型：把 James 的疑慮導向解法而不是追究責任、連結型：讓 David 去處理早期決策自己專注在進度報告"
+} }
+    ]
+  },
+  {
+    week: "Week 3｜Domain Knowledge 基礎篇", weekDesc:"情境 #01-#10：進入新專案、每週 Refine、主管問你",
+        days: [
+          { id:"d11dk", day:"Day 11", isNew:false, done:true,
+            title:"建立第一張邏輯地圖", sub:"從 Kickoff 到邏輯地圖初版，完整走一遍",
+            tags:[["p-dk","專案掌握"],["p-ai","AI 技能"]],
+            blocks:[
+              {label:"練習情境", body:"#01 全新專案，你是第一個 TPM\n#21 Kickoff 訪談後建立邏輯地圖初版\n\n→ 對應情境使用指南：進入新專案 #01、邏輯地圖維護 #21"},
+              {label:"核心流程", body:"Step 1 做完 Kickoff → 訪談筆記貼進建立初版 Prompt → AI 產出邏輯地圖 → 你審閱修改 → 存進 repo"},
+              {label:"Debrief", body:"你的邏輯地圖初版建立好了嗎？哪些欄位是「待確認」？"}
+            ], deliverable:"產出：第一張邏輯地圖初版", retro:{
+  rating:4,
+  good:"主動走完 Step 1 四層問題、Prompt 格式完整正確、發現工具箱成功定義缺 Business Value 和 Justification 兩個重要概念、主動提出把 BV/Justification 整合進工具箱",
+  improve:"做什麼那層少問了「結束時要交付什麼？」、對成功定義的理解一開始有誤解（以為 PO signoff 就是成功）",
+  next:"Day 12 練習第一次 Refine，會議前先打開今天建立的邏輯地圖",
+  influence:"系統型：發現工具箱缺口並主動改善，讓工具更完整"
+} },
+          { id:"d12dk", day:"Day 12", isNew:false, done:false,
+            title:"第一次 Refine，把地圖用起來", sub:"建立每週維護邏輯地圖的習慣",
+            tags:[["p-dk","專案掌握"],["p-ai","AI 技能"]],
+            blocks:[
+              {label:"練習情境", body:"#05 正常的 Refine，沒有特別狀況\n#22 週五用流水帳更新邏輯地圖\n\n→ 對應情境使用指南：每週 Refine #05、邏輯地圖維護 #22"},
+              {label:"核心流程", body:"會議前打開地圖確認 → 會議中插話問假設 → 會議後記流水帳 → 週五更新地圖"},
+              {label:"Debrief", body:"這週的 Refine，你問了什麼問題？地圖有哪些地方更新了？"}
+            ], deliverable:"產出：更新後的邏輯地圖 v2", retro:null },
+          { id:"d13dk", day:"Day 13", isNew:false, done:false,
+            title:"Kickoff 的兩個困難情況", sub:"PM 答案模糊 + 接手有舊記錄的專案",
+            tags:[["p-dk","專案掌握"]],
+            blocks:[
+              {label:"練習情境", body:"#02 全新專案，PM 答案很模糊\n#03 接手進行中的專案，有舊記錄\n\n→ 對應情境使用指南：進入新專案 #02、#03"},
+              {label:"核心技能", body:"#02：舉例法/對比法/量化法把模糊答案逼出來\n#03：先讀舊記錄 → 補課確認假設 → 更新邏輯地圖"},
+              {label:"Debrief", body:"什麼時候該用舉例法？什麼時候該用量化法？"}
+            ], deliverable:null, retro:null },
+          { id:"d14dk", day:"Day 14", isNew:false, done:false,
+            title:"主管問你三種難度的問題", sub:"從知道答案到完全不知道",
+            tags:[["p-dk","專案掌握"],["p-boss","主管關卡"]],
+            blocks:[
+              {label:"練習情境", body:"#11 主管問你知道答案的問題\n#12 邏輯地圖標注「待確認」\n#13 邏輯地圖完全沒有這個資訊\n\n→ 對應情境使用指南：遇到問題 #11、#12、#13"},
+              {label:"核心技能", body:"#11：打開地圖 → 追問 → 跟主管說影響\n#12：不要猜，告訴主管你需要多少時間確認\n#13：一句話說清楚背景，三分鐘跨部門確認"},
+              {label:"Debrief", body:"三種情況你的反應有什麼不同？哪一種最難？"}
+            ], deliverable:null, retro:null },
+          { id:"d15dk", day:"Day 15", isNew:false, done:false,
+            title:"把技術語言翻譯成邏輯語言", sub:"工程師一直給技術答案 + 說做不到",
+            tags:[["p-dk","專案掌握"]],
+            blocks:[
+              {label:"練習情境", body:"#14 工程師一直給技術答案\n#10 工程師說「這個需求做不到」\n\n→ 對應情境使用指南：遇到問題 #14、每週 Refine #10"},
+              {label:"核心技能", body:"#14：第一層追問 → 第二層追問 → 最後一招\n#10：澄清「做不到」的意思 → 問需求背後的目的 → 找中間解法"},
+              {label:"Debrief", body:"你什麼時候需要用第二層追問？中間解法你找到了嗎？"}
+            ], deliverable:null, retro:null }
+        ]},
+      { week: "Week 3｜Domain Knowledge 進階篇", weekDesc:"情境 #06-#20：Refine 困難情況、假設問題、突發狀況",
+        days: [
+          { id:"d16dk", day:"Day 16", isNew:false, done:false,
+            title:"Refine 的三個困難情況", sub:"假設未驗證 + PO 工程師衝突 + 決定沒解決",
+            tags:[["p-dk","專案掌握"]],
+            blocks:[
+              {label:"練習情境", body:"#06 Refine 中發現假設從來沒被驗證\n#07 PO 和工程師意見不一致\n#09 決定在會議中沒有被解決\n\n→ 對應情境使用指南：每週 Refine #06、#07、#09"},
+              {label:"核心技能", body:"#06：「這個假設我們有沒有驗證過？」→ 排進行動項目\n#07：量化風險 → 翻譯給 PO → 讓 PO 決定\n#09：記進流水帳：待決定 + 誰負責 + 預計回覆時間"},
+              {label:"Debrief", body:"你在哪個情況最容易忘記跟進？"}
+            ], deliverable:null, retro:null },
+          { id:"d17dk", day:"Day 17", isNew:false, done:false,
+            title:"假設出問題時怎麼辦", sub:"PM 不接受驗證結果 + 假設連鎖反應",
+            tags:[["p-dk","專案掌握"],["p-push","推動力"]],
+            blocks:[
+              {label:"練習情境", body:"#15 假設驗證是錯的，但 PM 不接受\n#20 一個假設被推翻，連鎖反應\n\n→ 對應情境使用指南：遇到問題 #15、突發狀況 #20"},
+              {label:"核心技能", body:"#15：量化風險 → 提出降低風險的最小可行方案\n#20：往上往下追假設依賴關係 → 跟 PM 說連鎖影響"},
+              {label:"Debrief", body:"你怎麼讓 PM 在不接受的情況下仍然做有資訊的決定？"}
+            ], deliverable:null, retro:null },
+          { id:"d18dk", day:"Day 18", isNew:false, done:false,
+            title:"人員變動，邏輯地圖的價值", sub:"PM 突然離職 + 新 PM 加入",
+            tags:[["p-dk","專案掌握"]],
+            blocks:[
+              {label:"練習情境", body:"#04 前任 TPM 突然離職\n#23 新 PM 加入，用邏輯地圖幫她了解專案\n\n→ 對應情境使用指南：進入新專案 #04、邏輯地圖維護 #23"},
+              {label:"核心技能", body:"#04：工程師補課 → 重建地圖 → 跟新 PM 重做 Kickoff\n#23：邏輯地圖當 onboarding 文件 → 30 分鐘對齊 → 重新量化成功定義"},
+              {label:"Debrief", body:"邏輯地圖在人員變動時幫了你什麼？"}
+            ], deliverable:null, retro:null },
+          { id:"d19dk", day:"Day 19", isNew:false, done:false,
+            title:"極端情況：完全聽不懂 + 大改方向", sub:"最難的兩個情況",
+            tags:[["p-dk","專案掌握"]],
+            blocks:[
+              {label:"練習情境", body:"#08 討論內容你完全聽不懂\n#16 專案中途被要求大改方向\n\n→ 對應情境使用指南：每週 Refine #08、突發狀況 #16"},
+              {label:"核心技能", body:"#08：拉回使用者影響層面 / 先記關鍵詞 / 會議後補課\n#16：重寫一句話 → 審查每個假設 → 重新做 Kickoff"},
+              {label:"Debrief", body:"大改方向時，你的邏輯地圖要改多少？哪些可以留？"}
+            ], deliverable:null, retro:null },
+          { id:"d20dk", day:"Day 20", isNew:false, done:false,
+            title:"不在場 + 多專案管理", sub:"你不在時有人決定 + 多專案記錄混亂",
+            tags:[["p-dk","專案掌握"]],
+            blocks:[
+              {label:"練習情境", body:"#17 你不在時有人做了重大決定\n#18 同時負責多個專案，記錄混亂\n\n→ 對應情境使用指南：突發狀況 #17、#18"},
+              {label:"核心技能", body:"#17：補課順序——工程師 → 記錄 → PO → 更新地圖 → 主管\n#18：每個專案獨立邏輯地圖 + 流水帳加專案標籤"},
+              {label:"Debrief", body:"你不在時，有沒有人能繼續維護邏輯地圖？"}
+            ], deliverable:null, retro:null }
+        ]},
+      { week: "Week 4｜Domain Knowledge 綜合篇", weekDesc:"情境 #19-#24：多專案挑戰、綜合壓力測試",
+        days: [
+          { id:"d21dk", day:"Day 21", isNew:false, done:false,
+            title:"多專案 TPM 的特殊挑戰", sub:"跨專案 bug + 邏輯地圖太大",
+            tags:[["p-dk","專案掌握"]],
+            blocks:[
+              {label:"練習情境", body:"#19 一個 bug 同時影響兩個專案\n#24 邏輯地圖越來越大，難以維護\n\n→ 對應情境使用指南：突發狀況 #19、邏輯地圖維護 #24"},
+              {label:"核心技能", body:"#19：分別打開兩個邏輯地圖 → 判斷是否同根本原因 → 跟主管說連動\n#24：按三個時機精簡 → 用 AI 幫你判斷"},
+              {label:"Debrief", body:"你的邏輯地圖現在需要精簡了嗎？"}
+            ], deliverable:null, retro:null },
+          { id:"d22dk", day:"Day 22", isNew:false, done:false,
+            title:"綜合壓力測試", sub:"一天遇到多個不同類型的狀況，測試直覺反應",
+            tags:[["p-dk","專案掌握"],["p-boss","主管關卡"],["p-push","推動力"]],
+            blocks:[
+              {label:"上午：突發連環狀況", body:"主管突然問你 #11 → 工程師說做不到 #10 → Refine 發現假設未驗證 #06\n你的任務：每個狀況都在 3 分鐘內決定下一步"},
+              {label:"下午：從混亂到釐清", body:"發現多個假設出問題 #15 + #20 → 邏輯地圖需要更新 #22\n你的任務：更新地圖，準備跟主管報告"},
+              {label:"Debrief", body:"哪些情境你已經有直覺反應？哪些還需要查指南？"}
+            ], deliverable:"產出：更新後的邏輯地圖 + 給主管的一頁式報告", retro:null }
+        ]},
+      { week: "Week 5｜從個人到團隊：診斷與設計",
+    weekDesc: "Phase 1 + Phase 2：看懂問題、設計解法",
+    days: [
+      { id:"d23", day:"Day 23", isNew:false, done:false, title:"業界案例診斷：AI 導入為什麼失敗？", sub:"五個真實案例，練習找真正的問題而不是症狀", tags:[["p-push","推動力"],["p-ai","AI 技能"]], blocks:[{label:"早上 2hr｜案例分析", body:"我給你五個半導體公司的 AI 導入失敗案例，你診斷：真正的問題是什麼？用 AI 做 5 Whys 分析。"},{label:"下午 2hr｜訪談工具設計", body:"設計回公司後要問的診斷問題。我扮演三種不同角色回答。"},{label:"Debrief 30min", body:"你設計的診斷工具，如何讓它在你不在場的時候也能被使用？"}], deliverable:"產出：團隊 AI 現況診斷工具箱", retro:null },
+      { id:"d24", day:"Day 24", isNew:false, done:false, title:"主管關卡：說清楚問題值得解決", sub:"把質化觀察轉化為主管聽得懂的語言", tags:[["p-push","推動力"],["p-boss","主管關卡"],["p-ai","AI 技能"]], blocks:[{label:"早上 2hr｜主管角色扮演", body:"我扮演你主管，你說：我發現團隊有個 AI 使用的問題。主管問：有多嚴重？有數據嗎？"},{label:"下午 2hr｜量化語言練習", body:"用 AI 把質化觀察轉化成可以說服主管的量化語言和商業影響。"},{label:"Debrief 30min", body:"你的流程改善提案，跟公司今年的優先事項有沒有連結？"}], deliverable:"產出：問題陳述草稿 + 成功指標初版", retro:null },
+      { id:"d12_5", day:"Day 12.5", isNew:true, done:false, title:"主管說不：被拒絕之後怎麼辦？", sub:"第一次提案失敗，不是終點", tags:[["p-boss","主管關卡"],["p-push","推動力"],["p-new","新增"]], blocks:[{label:"早上 2hr｜被拒絕情境", body:"主管說：這個我知道，但現在不是優先事項。你只有五分鐘讓他改變想法，或者重新規劃策略。"},{label:"下午 2hr｜重新包裝練習", body:"分析主管說不的真正原因，用 AI 設計三種不同切入角度重新提案。"},{label:"Debrief 30min", body:"被拒絕後，你怎麼讓主管記住你嘗試過？怎麼為下一次鋪路？"}], deliverable:"產出：提案重新包裝框架 + 被拒絕後的行動 SOP", retro:null },
+      { id:"d25", day:"Day 25", isNew:false, done:false, title:"解法設計：三個原則、一個 Pilot", sub:"設計真正能跑起來的 AI 流程", tags:[["p-push","推動力"],["p-ai","AI 技能"]], blocks:[{label:"早上 2hr｜解法設計", body:"針對三個真實痛點各設計一個 AI 解決方案。限制：不超過三步驟、不增加新工具、你沒有正式授權。"},{label:"下午 2hr｜Prompt 模板庫設計", body:"設計三個可以直接給團隊用的 prompt 模板。我扮演不完全懂 AI 的工程師來試用。"},{label:"Debrief 30min", body:"你設計的解法，如果你明天離職，還能繼續跑嗎？"}], deliverable:"產出：團隊 prompt 模板庫 v1（3 個模板）", retro:null },
+      { id:"d26", day:"Day 26", isNew:false, done:false, title:"SOP 設計 + 成功指標 + 交接設計", sub:"讓流程在你不在的時候也能跑", tags:[["p-push","推動力"],["p-ai","AI 技能"],["p-new","新增"]], blocks:[{label:"早上 2hr｜SOP + 交接設計", body:"把 AI 流程寫成任何人都能照著跑的 SOP。設計交接文件：如果你明天離職，這個流程怎麼繼續？"},{label:"下午 2hr｜成功指標設計", body:"設計可量測的成功指標：三個月後怎麼向主管證明這個流程有效？"},{label:"Debrief 30min", body:"今天你設計的這套東西，三個月後會有多少人因為它而改變工作方式？"}], deliverable:"產出：AI 使用 SOP + 成功指標框架 + 交接文件模板", retro:null },
+      { id:"d27", day:"Day 27", isNew:false, done:false, title:"Week 3 整合：提案初稿", sub:"把診斷 + 設計整合成提案的前半段", tags:[["p-push","推動力"],["p-boss","主管關卡"],["p-ai","AI 技能"]], blocks:[{label:"早上 2hr｜整合產出", body:"用 AI 把 Day 11–14 的所有產出整合成提案初稿：問題 + 解法 + 成功指標 + 影響力擴散計畫。"},{label:"下午 1hr｜Peer Review", body:"如果你是決策者，這份提案說服你了嗎？"}], deliverable:"產出：提案初稿（含成功指標 + 影響力計畫）", milestone:"里程碑：提案初稿完成，進入推動階段", retro:null }
+    ]
+  },
+  {
+    week: "Week 6｜推動、說服、整合產出",
+    weekDesc: "Phase 3：讓真實的人改變習慣，完成最終提案",
+    days: [
+      { id:"d28", day:"Day 28", isNew:false, done:false, title:"找盟友：沒有授權，怎麼推動？", sub:"你是 Senior Engineer，不是 Manager，影響力從哪來？", tags:[["p-push","推動力"],["p-new","新增"],["p-ai","AI 技能"]], blocks:[{label:"早上 2hr｜無授權 Pilot 設計", body:"我給你一個八人團隊，你沒有任何正式管理權限。設計 pilot 計畫：怎麼讓人自願參與？"},{label:"下午 2hr｜影響力來源分析", body:"用 AI 分析四種影響力來源（專業、關係、互惠、資訊）。設計影響力擴散機制。"},{label:"Debrief 30min", body:"今天你設計的 pilot，三個月後哪些人因為你而成長了？"}], deliverable:"產出：無授權推動策略 + 影響力擴散設計 + Pilot 計畫", retro:null },
+      { id:"d29", day:"Day 29", isNew:false, done:false, title:"跨文化說服：美國主管不買單", sub:"台灣工程師 vs 美國主管，溝通方式完全不同", tags:[["p-push","推動力"],["p-new","新增"],["p-ai","AI 技能"]], blocks:[{label:"早上 2hr｜跨文化角色扮演", body:"我扮演美國籍 Director，你來說服我支持你的 AI 流程提案。"},{label:"下午 2hr｜跨文化溝通設計", body:"用 AI 分析台灣 vs 美國職場溝通差異。設計跨文化溝通 cheatsheet。"},{label:"Debrief 30min", body:"今天你在跨文化情境裡展現的影響力，回公司後如何繼續練習？"}], deliverable:"產出：跨文化溝通 cheatsheet", retro:null },
+      { id:"d30", day:"Day 30", isNew:false, done:false, title:"突發狀況：Pilot 失敗 + 維持機制設計", sub:"失敗之後怎麼辦？成功之後怎麼讓流程持續？", tags:[["p-push","推動力"],["p-boss","主管關卡"],["p-ai","AI 技能"],["p-new","新增"]], blocks:[{label:"早上 2hr｜危機處理", body:"第一週 pilot 結果不好。主管問你：繼續還是停？你要決策、改方案、跟主管報告。"},{label:"下午 2hr｜維持機制設計", body:"設計讓 AI 流程三個月後還在用的機制。設計讓流程在你不在的時候也能自己跑的系統。"},{label:"Debrief 30min", body:"今天你設計的維持機制，讓哪些人得到了成長的機會？"}], deliverable:"產出：改善方案 v2 + 流程維持機制 + 交接 SOP", retro:null },
+      { id:"d31", day:"Day 31", isNew:false, done:false, title:"最終提案整合 + 影響力故事", sub:"把四週所有產出整合，說出你帶動了誰、改變了什麼", tags:[["p-push","推動力"],["p-pm","PM"],["p-ai","AI 技能"]], blocks:[{label:"早上 3hr｜整合產出", body:"用 AI 把 Week 1–4 的所有產出整合成完整提案：問題診斷 + 解法設計 + Pilot 計畫 + 成功指標 + 維持機制 + 風險緩解。"},{label:"下午 1hr｜影響力敘事設計", body:"學習敘事 prompt：誰因為你而改變、他們帶動了誰、整個團隊的效率提升了多少。"},{label:"Debrief 30min", body:"四週下來，你帶動了哪些人？產生了哪些可量測的影響？"}], deliverable:"產出：完整 AI 流程改善提案 + 影響力故事腳本", retro:null },
+      { id:"d32", day:"Day 32", isNew:false, done:false, title:"最終關卡：高層 Present + 一個月行動計畫", sub:"說服 VP，然後設計回公司後的真實執行計畫", tags:[["p-push","推動力"],["p-boss","主管關卡"],["p-ai","AI 技能"]], blocks:[{label:"早上 2hr｜高層 Present", body:"你來 present 完整提案，我扮演 VP 問最難的問題：這跟公司 AI 策略有什麼關係？三個月後怎麼證明有效？"},{label:"下午 2hr｜最終 Debrief + 行動計畫", body:"四週總回顧。設計回公司後第一個月的具體行動計畫。"}], deliverable:"產出：回公司後第一個月行動計畫 + 影響力追蹤表", milestone:"最終里程碑：完成 20 天精通課程", retro:null }
+    ]
+  }
+];
+
+function renderStars(rating) {
+  return [1,2,3,4,5].map(i => `<span class="star ${rating>=i?'active':''}">★</span>`).join('');
+}
+
+function buildCard(day) {
+  const r = day.retro;
+  const hasRetro = r && (r.good || r.improve);
+
+  const card = document.createElement('div');
+  card.className = 'day-card' + (day.isNew?' is-new':'') + (day.done?' is-done':'');
+
+  const tagHtml = day.tags.map(([cls,label])=>`<span class="pill ${cls}">${label}</span>`).join('');
+  const newBadge = day.isNew ? `<span class="badge badge-new">新增</span>` : '';
+  const doneBadge = day.done ? `<span class="badge badge-done">✓ 完成</span>` : '';
+
+  const blocksHtml = day.blocks.map(b=>`
+    <div class="block">
+      <div class="block-label">${b.label}</div>
+      <div class="block-body">${b.html !== undefined ? b.html : b.body.replace(/\n/g,'<br>')}</div>
+    </div>
+  `).join('');
+
+  let retroHtml = '';
+  if (r) {
+    retroHtml = `
+      <div class="retro-section">
+        <div class="retro-title">每日 Retro 記錄</div>
+        <div class="retro-status has-data">已有 Retro 記錄</div>
+        <div class="rating-row">
+          <span class="rating-label">今天自評</span>
+          <div class="stars">${renderStars(r.rating)}</div>
+        </div>
+        <div class="retro-grid">
+          <div class="retro-box retro-box-good">
+            <div class="retro-box-label">✅ 做得好的地方</div>
+            <div class="retro-content">${r.good}</div>
+          </div>
+          <div class="retro-box retro-box-improve">
+            <div class="retro-box-label">⚠️ 需要改善的地方</div>
+            <div class="retro-content is-improve">${r.improve}</div>
+          </div>
+        </div>
+        <div class="retro-box retro-box-next" style="margin-bottom:10px">
+          <div class="retro-box-label">🔮 後面課程如何改善</div>
+          <div class="retro-content">${r.next}</div>
+        </div>
+        <div class="retro-box retro-box-influence">
+          <div class="retro-box-label">🌊 影響力記錄</div>
+          <div class="retro-content">${r.influence}</div>
+        </div>
+      </div>
+    `;
+  } else {
+    retroHtml = `
+      <div class="retro-section">
+        <div class="retro-title">每日 Retro 記錄</div>
+        <div class="retro-status">尚未完成這天的練習</div>
+      </div>
+    `;
+  }
+
+  card.innerHTML = `
+    <div class="day-header">
+      <div class="day-num">${day.day}</div>
+      <div class="day-info">
+        <div class="day-title-row">
+          <span class="day-title">${day.title}</span>
+          ${newBadge}${doneBadge}
+        </div>
+        <div class="day-sub">${day.sub}</div>
+        <div class="day-tags">${tagHtml}</div>
+      </div>
+      <div class="day-chev">▾</div>
+    </div>
+    <div class="day-body">
+      <div class="blocks">${blocksHtml}</div>
+      <div class="debrief-box">
+        <div class="debrief-title">每日影響力三問（Debrief 必問）</div>
+        <div class="debrief-q">今天你做的事，誰是第一個受惠的人？</div>
+        <div class="debrief-q">這個影響力怎麼擴散出去？</div>
+        <div class="debrief-q">如果要教給別人，你會怎麼設計這個學習過程？</div>
+      </div>
+      <div><span class="deliverable">📦 ${day.deliverable}</span></div>
+      ${retroHtml}
+    </div>
+  `;
+
+  card.querySelector('.day-header').addEventListener('click', () => {
+    const isOpen = card.classList.contains('open');
+    document.querySelectorAll('.day-card').forEach(c => c.classList.remove('open'));
+    if (!isOpen) card.classList.add('open');
+  });
+
+  return card;
+}
+
+// Toolbox card data
+const tools = [
+  {
+    id: "t1", category: "突發應對", color: "purple",
+    icon: "⚡",
+    title: "收到突發資訊時，先想清楚再行動",
+    subtitle: "先停下來，想清楚再行動",
+    content: `
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">收到新資訊或突發狀況時，先回答這六個問題，不要急著回覆或做決定</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${["1. 先停下來｜給自己 2 分鐘，問自己：我現在知道什麼？不知道什麼？",
+           "2. 把資訊分類｜已確認的事實是什麼？還不確定的是什麼？誰知道我不知道的事？",
+           "3. 評估影響範圍｜這件事影響誰？多久？最壞情況？先想好 B 計畫",
+           "4. 決定誰來做什麼｜哪些事只有我能做？哪些可以讓別人做？",
+           "5. 決定溝通順序｜誰需要第一個知道？用什麼方式說？Bottom line 先說",
+           "6. 設定 Checkpoint｜什麼時候重新檢查？A 計畫不順時什麼時候啟動 B 計畫？"
+          ].map(s => `<div style="background:white;border-radius:8px;padding:.7rem 1rem;font-size:12px;color:var(--text-secondary);border:1px solid var(--border)">${s}</div>`).join('')}
+      </div>
+      <div style="margin-top:1rem;background:var(--purple-light);border-radius:8px;padding:.7rem 1rem;font-size:12px;color:var(--purple);font-weight:500">Day 3 案例：收到 Marcus 的 Slack，先打電話了解，沒有直接答應 → 才發現可以用 Excel 取代 dashboard</div>`
+  },
+  {
+    id: "t2", category: "突發應對", color: "purple",
+    icon: "💬",
+    title: "被問「為什麼沒人發現」時怎麼回",
+    subtitle: "認因轉：承認、說明、轉向解法",
+    content: `
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">主管或高層問你「為什麼沒人早點發現」時，先判斷情境再用對應說法</div>
+      ${[
+        ["情境 A：流程根本不存在", "「目前沒有這個機制，不是因為疏忽，而是這個流程本身不存在。我們現在可以把它建立起來。」"],
+        ["情境 B：流程設計有漏洞", "「我們有這個流程，但沒有考慮到這種特殊情況。可以把這個 edge case 補進規則裡。」"],
+        ["情境 C：流程存在但沒執行到", "「流程是對的，但這次沒被執行到。問題不是誰沒注意，而是怎麼讓它不靠人記——可以改成系統強制執行。」"]
+      ].map(([label, eg]) => `
+        <div style="background:white;border-radius:8px;padding:.7rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:4px">${label}</div>
+          <div style="font-size:12px;color:var(--text-secondary)">${eg}</div>
+        </div>`).join('')}
+      <div style="margin-top:.5rem;background:var(--purple-light);border-radius:8px;padding:.7rem 1rem;font-size:12px;color:var(--purple);font-weight:500">永遠先承認現狀，把原因講成系統問題，最後立刻轉向解法。不要點名是誰的疏忽。</div>`
+  },
+  {
+    id: "t3", category: "影響力", color: "green",
+    icon: "🏆",
+    title: "往上報告好消息時，記得公開點名功勞",
+    subtitle: "這個成果裡，誰的名字該被提到？",
+    content: `
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">帶著好消息往上報告時，最容易忘記說出是誰做到的</div>
+      <div style="background:var(--coral-light);border-radius:8px;padding:.7rem 1rem;margin-bottom:8px;font-size:12px;color:var(--coral)">❌「我們解決了 HBM3E 的 bug，timeline 從 10 天縮短到 2-3 天。」</div>
+      <div style="background:var(--accent-light);border-radius:8px;padding:.7rem 1rem;margin-bottom:12px;font-size:12px;color:var(--accent)">✅「Kevin 和 Brian 合力解決了 HBM3E 的 bug，Ray 協助評估資源，timeline 從 10 天縮短到 2-3 天。」</div>
+      <div style="background:var(--accent-light);border-radius:8px;padding:.7rem 1rem;font-size:12px;color:var(--accent);font-weight:500">報告前固定問自己：「這個成果裡，誰的名字應該被提到？」</div>`
+  },
+  {
+    id: "t4", category: "影響力", color: "green",
+    icon: "🌊",
+    title: "怎麼判斷今天的影響力是什麼",
+    subtitle: "教會 / 連結 / 系統 / 信任",
+    content: `
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">影響力不只一種，先判斷今天是哪一種</div>
+      ${[
+        ["教會型", "你讓某個人學到了新技能或新思維", "Day 3：帶 Ray 進 David 會議，他看到你怎麼跟主管溝通"],
+        ["連結型", "你讓原本沒有交集的人或資源連結起來", "Day 3：約 Brian 來分享，解決了卡住好幾天的 bug"],
+        ["系統型", "你推動了一個改變，影響範圍超出眼前", "Day 4：提出 validation pipeline 自動檢查機制"],
+        ["信任型", "你的表現讓更高層的人建立對你的信心", "Day 4：VP 對你說「good to have you back」"]
+      ].map(([type, def, eg]) => `
+        <div style="background:white;border-radius:8px;padding:.7rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:600;color:var(--accent);margin-bottom:3px">${type}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:3px">${def}</div>
+          <div style="font-size:11px;color:var(--text-muted)">例：${eg}</div>
+        </div>`).join('')}
+      <div style="margin-top:.5rem;background:var(--accent-light);border-radius:8px;padding:.7rem 1rem;font-size:12px;color:var(--accent);font-weight:500">每天結束問自己：今天的影響力，是教會了誰、連結了什麼、改變了系統、還是建立了信任？</div>`
+  },
+  {
+    id: "t5", category: "影響力", color: "green",
+    icon: "👥",
+    title: "影響力自然發生的三個習慣",
+    subtitle: "先問動機 / 帶人一起 / 點名貢獻",
+    content: `
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">影響力不是刻意去做的，而是這三個思維習慣自然產生的副產品</div>
+      ${[
+        ["習慣一：先問動機，再評估做法", "每次收到需求，先問：「為什麼需要這個？」→ 自然產生連結型影響力", "Day 6：問清楚 Sarah 為什麼需要 dashboard，發現 Excel 就夠了"],
+        ["習慣二：帶人一起，不要自己做掉", "每次要解決問題，先問：「這件事誰可以一起做？」→ 自然產生教會型影響力", "你的價值是讓問題被正確地解決，不是自己做掉"],
+        ["習慣三：把成果說出來，點名貢獻者", "每次往上報告，先問：「這個成果是誰做到的？」→ 自然產生信任型影響力", "點名貢獻者不會讓你消失，反而讓人看見你懂得帶人"]
+      ].map(([h, def, eg]) => `
+        <div style="background:white;border-radius:8px;padding:.7rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:600;color:var(--accent);margin-bottom:3px">${h}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:3px">${def}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${eg}</div>
+        </div>`).join('')}
+      <div style="margin-top:.5rem;background:var(--accent-light);border-radius:8px;padding:.7rem 1rem;font-size:12px;color:var(--accent);font-weight:500">Individual contributor 的價值是解決問題。Leader 的價值是讓問題被正確地解決。</div>`
+  },
+  {
+    id: "t6", category: "需求溝通", color: "amber",
+    icon: "🎯",
+    title: "需求會議：找到「最終目的句」",
+    subtitle: "先找最終目的句，再用 2x2 排優先順序",
+    content: `
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">開需求會議時，stakeholder 通常會說出一句話透露他們最在意什麼——這句話決定哪個功能排第一</div>
+      <div style="background:white;border-radius:8px;padding:.7rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:4px">什麼是最終目的句？</div>
+        <div style="font-size:12px;color:var(--text-secondary)">通常是「我需要知道 XXX」或「我最擔心的是 XXX」這種句型</div>
+      </div>
+      <div style="background:white;border-radius:8px;padding:.7rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:4px">Day 6 的例子</div>
+        <div style="font-size:12px;color:var(--text-secondary)">Sarah 說：「We need to know at a glance: are we going to make tapeout or not?」→ 這句話告訴你風險指標才是她最在意的功能</div>
+      </div>
+      <div style="background:white;border-radius:8px;padding:.7rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:4px">怎麼用</div>
+        <div style="font-size:12px;color:var(--text-secondary)">開會時主動找這句話，把它記下來 → 用 2x2 排優先順序後，對照最終目的句調整排名 → 這句話也是你寫 Bottom line 的最佳素材</div>
+      </div>
+      <div style="background:var(--amber-light);border-radius:8px;padding:.7rem 1rem;font-size:12px;color:var(--amber);font-weight:500">記下 stakeholder 的最終目的句，它比任何數字排序都更能告訴你什麼功能最重要</div>`
+  },
+  {
+    id: "t6b", category: "需求溝通", color: "amber",
+    icon: "📊",
+    title: "功能優先順序：影響 vs 努力 2x2",
+    subtitle: "比 RICE 更快，5 分鐘排出優先順序",
+    content: `
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">不需要精確數字，只需要判斷「高/低」，5 分鐘就能排完所有功能</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        <div style="background:#E8F4EE;border:1px solid #B7D8C4;border-radius:8px;padding:.875rem;text-align:center">
+          <div style="font-size:13px;font-weight:700;color:#2D6A4F;margin-bottom:4px">⚡ Quick Win</div>
+          <div style="font-size:11px;color:#2D6A4F;font-weight:500">高影響 + 低努力</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">立刻做，不要猶豫</div>
+        </div>
+        <div style="background:#E6F1FB;border:1px solid #8DC4EF;border-radius:8px;padding:.875rem;text-align:center">
+          <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:4px">📋 Major Project</div>
+          <div style="font-size:11px;color:#0C447C;font-weight:500">高影響 + 高努力</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">計畫做，排進 roadmap</div>
+        </div>
+        <div style="background:#FEF3E2;border:1px solid #F5C882;border-radius:8px;padding:.875rem;text-align:center">
+          <div style="font-size:13px;font-weight:700;color:#92540A;margin-bottom:4px">🕐 Fill-in</div>
+          <div style="font-size:11px;color:#92540A;font-weight:500">低影響 + 低努力</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">有空再做</div>
+        </div>
+        <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:.875rem;text-align:center">
+          <div style="font-size:13px;font-weight:700;color:#991B1B;margin-bottom:4px">🚫 Time Waster</div>
+          <div style="font-size:11px;color:#991B1B;font-weight:500">低影響 + 高努力</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">不做，說清楚為什麼</div>
+        </div>
+      </div>
+
+      <div style="background:white;border-radius:8px;padding:.875rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:8px">怎麼用（兩個問題）</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.8">
+          <strong>影響高不高？</strong>：如果不做這個，最重要的 stakeholder 會有多痛？<br>
+          <strong>努力高不高？</strong>：這個功能需要幾週以上才能完成？
+        </div>
+      </div>
+
+      <div style="background:white;border-radius:8px;padding:.875rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:8px">Day 6 範例（dashboard 五個功能）</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.9">
+          ⚡ <strong>A 整體進度百分比</strong>：高影響（leadership 每天要看）+ 低努力（0.5 週）→ Quick Win<br>
+          ⚡ <strong>B pass/fail 狀態</strong>：高影響 + 低努力（0.5 週）→ Quick Win<br>
+          📋 <strong>E tapeout 風險指標</strong>：高影響（Sarah 最在意）+ 高努力（2.5 週）→ Major Project<br>
+          📋 <strong>C fail case owner</strong>：高影響 + 高努力（2 週）→ Major Project<br>
+          🕐 <strong>D 歷史趨勢圖</strong>：低影響（需要累積資料）+ 高努力（2 週）→ Fill-in
+        </div>
+      </div>
+
+      <div style="background:var(--amber-light);border-radius:8px;padding:.7rem 1rem;font-size:12px;color:var(--amber);font-weight:500">
+        什麼時候用哪個？<br>
+        平常：2x2（最快）｜有時間：三個問題法｜需要說服人：RICE（有數字）
+      </div>`
+  },
+  {
+    id: "t7", category: "AI 工具", color: "blue",
+    icon: "📒",
+    title: "每日流水帳習慣",
+    subtitle: "讓 AI 比你更清楚來龍去脈",
+    content: `
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">每天花 5 分鐘記錄，週五貼給 AI 整理週報。不要記在跟 AI 的對話裡——對話太長 AI 會遺忘。</div>
+      <div style="background:white;border-radius:8px;padding:.7rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:4px">記錄格式</div>
+        <div style="font-size:12px;color:var(--text-secondary);font-family:monospace;line-height:1.8">【HBM3E】週一 - Kevin 回報 bug，初估 10 天<br>【Marcus】週三 - 發現同樣問題，給他 branch 資訊<br>【流程改善】週四 - VP 會議，提出自動化驗證建議</div>
+      </div>
+      <div style="background:white;border-radius:8px;padding:.7rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:4px">所需時間</div>
+        <div style="font-size:12px;color:var(--text-secondary)">每天 5 分鐘 × 5 天 = 25 分鐘<br>週五 10 分鐘整理 prompt = 35 分鐘產出高品質週報</div>
+      </div>
+      <div style="background:var(--blue-light);border-radius:8px;padding:.7rem 1rem;font-size:12px;color:var(--blue);font-weight:500">你負責判斷和決策，把「記憶」的工作外包給文字記錄 + AI</div>`
+  },
+  {
+    id: "t8", category: "AI 工具", color: "blue",
+    icon: "✨",
+    title: "Prompt 工具包",
+    subtitle: "六元素框架 / 報告類 / 文件類",
+    content: `
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">所有跟 AI 溝通相關的工具，按用途分類</div>
+
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--blue-light)">📌 基礎｜Prompt 六元素框架</div>
+      <div style="background:white;border-radius:8px;padding:.875rem 1rem;margin-bottom:6px;border:1px solid var(--border)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;color:var(--text-secondary);margin-bottom:8px">
+          <div><strong style="color:var(--blue)">角色</strong>：告訴 AI 它是誰</div>
+          <div><strong style="color:var(--blue)">任務</strong>：目的和時間點</div>
+          <div><strong style="color:var(--blue)">背景</strong>：越具體產出越準確</div>
+          <div><strong style="color:var(--blue)">格式</strong>：輸出樣式</div>
+          <div><strong style="color:var(--blue)">受眾</strong>：給誰看</div>
+          <div><strong style="color:var(--blue)">語言</strong>：繁中／英文</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);padding-top:6px;border-top:1px solid var(--border)">告訴 AI「不要寫什麼」跟「要寫什麼」一樣重要</div>
+      </div>
+      <div style="background:var(--blue-light);border-radius:8px;padding:.7rem 1rem;margin-bottom:16px;font-size:11px;color:var(--blue);line-height:1.7;font-family:monospace">
+        角色：你是一個資深 TPM<br>
+        任務：幫我寫一封給後端主管的 email，請他本週給我 API 開發排程承諾<br>
+        背景：六週後上線，後端 API 還沒開始，資安審查卡著等後端<br>
+        格式：一封完整的郵件，含主旨<br>
+        受眾：後端主管，他目前在衝另一個優先級更高的專案<br>
+        語言：繁體中文
+      </div>
+
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--blue-light)">📊 報告類｜往上溝通用</div>
+
+      <div style="background:white;border-radius:8px;padding:.875rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:6px">給高層的一頁式報告</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.8">
+          <strong>Bottom line</strong>：結果 + 最關鍵的數字變化<br>
+          <strong>關鍵數字</strong>：2–3 個說明影響力大小<br>
+          <strong>Root cause</strong>：1–2 句，不用技術細節<br>
+          <strong>系統性風險</strong>：只影響這次還是會持續發生？<br>
+          <strong>建議</strong>：明確說出需要對方做什麼決定
+        </div>
+        <div style="background:var(--blue-light);border-radius:6px;padding:.6rem .8rem;margin-top:8px;font-size:11px;color:var(--blue);line-height:1.8">
+          <strong>Day 4 VP 報告範例：</strong><br><br>
+          Bottom line：HBM3E validation blocker 已解決，timeline 從 10 天縮短為 2–3 天，同時解決 Marcus 團隊的同樣問題<br><br>
+          關鍵數字：10 天 → 2–3 天 ／ 2 個團隊受益 ／ 0 tapeout 影響<br><br>
+          Root cause：Validation environment 在 branch 後未 sync master code，導致重複修復已存在的 fix<br><br>
+          系統性風險：這不是單一團隊的問題，所有使用此 pipeline 的團隊都有相同風險<br><br>
+          建議：請 Platform Infrastructure 在 deploy-to-test 前加自動檢查機制
+        </div>
+      </div>
+
+      <div style="background:white;border-radius:8px;padding:.875rem 1rem;margin-bottom:6px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:6px">週報 Prompt 模板</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.8">
+          角色 → 任務 → <strong>流水帳</strong>（貼上標籤格式記錄）→ 格式 → 受眾 → 語言
+        </div>
+        <div style="background:var(--blue-light);border-radius:6px;padding:.5rem .75rem;margin-top:6px;font-size:11px;color:var(--blue);line-height:1.7;font-family:monospace">
+          【HBM3E】週一 - Kevin 回報 bug，初估 10 天<br>
+          【Marcus】週三 - 發現同樣問題，給他 branch 資訊，解決<br>
+          【流程改善】週四 - VP 會議，提出自動化驗證建議
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">格式：【專案標籤】+ 星期幾 + 事件 + 誰做 + 結果</div>
+        <div style="background:var(--blue-light);border-radius:6px;padding:.6rem .8rem;margin-top:8px;font-size:11px;color:var(--blue);line-height:1.7;font-family:monospace">
+          <strong>完整 Prompt 範例：</strong><br><br>
+          角色：你是一個資深 TPM<br>
+          任務：把這週的流水帳整理成一份 summary<br>
+          流水帳：<br>
+          【HBM3E】週一 - Kevin 回報 bug，初估 10 天，約 10am sync<br>
+          【HBM3E】週三 - Brian 說 fix 在 master，Kevin merge 後解決，縮至 2-3 天<br>
+          【Marcus】週三 - 發現同樣問題，給他 branch 資訊，問題解決<br>
+          【流程改善】週四 - VP 會議，提出自動化驗證機制，VP 正面回應<br><br>
+          格式：Bottom line / 關鍵數字 / Root cause / Solution / Next step / 團隊貢獻點名<br>
+          受眾：給 David review，最終給 Director Sarah 看<br>
+          語言：繁體中文
+        </div>
+      </div>
+
+      <div style="background:var(--blue-light);border-radius:8px;padding:.7rem 1rem;margin-bottom:16px;font-size:12px;color:var(--blue)">
+        格式欄位：Bottom line / 關鍵數字 / Root cause / Solution / Next step / 團隊貢獻點名
+      </div>
+
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--blue-light)">📄 文件類｜產出可交付文件用</div>
+
+      <div style="background:white;border-radius:8px;padding:.875rem 1rem;margin-bottom:8px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:6px">PRD 寫作 SOP（按這個順序寫）</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.9">
+          <strong>Why</strong>：如果不做這件事，會發生什麼問題？<br>
+          <strong>Who</strong>：誰最需要這個？他們現在怎麼解決這個問題的？<br>
+          <strong>What</strong>：使用者打開這個產品，第一眼看到什麼？<br>
+          <strong>How well</strong>：需要多快？多安全？誰可以看？<br>
+          <strong>Not in scope</strong>：有沒有人以為我們會做但其實不做的？<br>
+          <strong>How to measure</strong>：三個月後怎麼知道有沒有解決問題？
+        </div>
+        <div style="background:var(--blue-light);border-radius:6px;padding:.6rem .8rem;margin-top:6px;font-size:11px;color:var(--blue);line-height:1.8">
+          <strong>套用範例（HBM3E dashboard）：</strong><br>
+          Why：目前 validation 進度不透明，leadership 需透過工程師轉述才能掌握狀況<br>
+          Who：Engineering leadership team，約 5–6 人，每天查看<br>
+          What：整體進度 progress bar、pass/fail 狀態、fail case 詳細資料<br>
+          How well：每天更新，僅限 leadership 5–6 人查看<br>
+          Not in scope：即時自動同步、複雜權限管理、行動裝置最佳化<br>
+          How to measure：leadership 查看率 &gt; 80%、主動詢問工程師次數減少 50%
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">卡關時：先口語說給 AI 聽 → AI 整理格式 → 你審閱修改</div>
+      </div>
+
+      <div style="background:white;border-radius:8px;padding:.875rem 1rem;margin-bottom:6px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:6px">受眾設定模板（多受眾同時產出）</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.8">
+          角色 → 任務 → 原始 spec → 每個受眾：<br>
+          &nbsp;&nbsp;最在意【XXX】/ 不需要知道【XXX】/ 語氣【XXX】/ 長度【XXX】
+        </div>
+        <div style="background:var(--blue-light);border-radius:6px;padding:.5rem .75rem;margin-top:6px;font-size:11px;color:var(--blue);line-height:1.7">
+          受眾一｜Kevin：最在意技術細節 / 不需要知道商業考量 / 專業技術語氣 / 詳細<br>
+          受眾二｜Sarah：最在意 tapeout 時程 / 不需要知道技術名詞 / 簡潔 / 3-5 句
+        </div>
+      </div>
+
+      <div style="background:var(--blue-light);border-radius:8px;padding:.7rem 1rem;font-size:12px;color:var(--blue);font-weight:500">
+        ⚠️ 永遠審閱 AI 輸出的數字，以及它自己補充但原始資料裡沒有的資訊
+      </div>`
+  }
+,
+  {
+    id: "t9", category: "專案掌握", color: "coral",
+    icon: "🗺️",
+    title: "Domain Knowledge 建立系統",
+    subtitle: "Kickoff → 每週 Refine → 遇到問題，一個完整的 SOP",
+    content: `
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">
+        這四個步驟是一個完整的系統，從加入新專案到每週維護，讓你不再跟不上專案邏輯。
+      </div>
+
+      <!-- 情境使用指南 -->
+      <details style="border:1px solid #F0997B;border-radius:10px;overflow:hidden;margin-bottom:10px">
+        <summary style="background:#FAECE7;padding:.6rem 1rem;font-size:12px;font-weight:600;color:#993C1D;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center" onclick="event.stopPropagation()">
+          情境使用指南｜遇到什麼情況，用哪個 Step
+          <span style="font-size:10px;font-weight:400;opacity:.7">點開查看</span>
+        </summary>
+        <div style="padding:.875rem 1rem;background:white">
+          <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;margin-bottom:8px;background:#FAECE7;border-radius:7px;padding:.5rem .75rem;font-size:10px;font-weight:600;color:#712B13">
+            <div>情境</div><div>用哪個 Step</div><div>第一個動作</div><div>⚠️ 需要客製化</div>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#712B13;padding:.3rem .5rem;margin:.5rem 0 4px;border-left:3px solid #F0997B">進入新專案</div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#01</span>全新專案，你是第一個 TPM</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 1 做 Kickoff → Step 4 建地圖</span></div><div style="color:#5F5E5A">做完 Kickoff 後，立刻用 AI 建立邏輯地圖初版</div><div style="color:#854F0B;font-size:10px">根據公司文化調整問法的正式程度</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#02</span>全新專案，PM 答案很模糊</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 1 + 具體化技巧</span></div><div style="color:#5F5E5A">停下來，用舉例法/對比法/量化法逼出具體答案</div><div style="color:#854F0B;font-size:10px">不同 PM 需要不同的具體化方式</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#03</span>接手進行中的專案，有舊記錄</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">先補課 → Step 4 建地圖</span></div><div style="color:#5F5E5A">先讀舊記錄，再補課確認哪些假設還成立</div><div style="color:#854F0B;font-size:10px">舊記錄品質差時，補課深度要加重</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#04</span>前任 TPM 突然離職，什麼都沒留</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">先補課 → Step 4 建地圖 → Step 1 重做</span></div><div style="color:#5F5E5A">工程師補課 → 重建邏輯地圖 → 跟新 PM 重做 Kickoff</div><div style="color:#854F0B;font-size:10px">公司有沒有標準交接流程</div></div>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#712B13;padding:.3rem .5rem;margin:.5rem 0 4px;border-left:3px solid #F0997B">每週 Refine 會議</div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#05</span>正常的 Refine，沒有特別狀況</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 2 照流程走</span></div><div style="color:#5F5E5A">會議前打開邏輯地圖，確認上週有沒有未解決的問題</div><div style="color:#854F0B;font-size:10px">每個公司的 refine 頻率和長度不同</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#06</span>Refine 中發現假設從來沒被驗證</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 2 會議中插話</span></div><div style="color:#5F5E5A">「這個假設我們有沒有驗證過？」→ 排進下週行動項目</div><div style="color:#854F0B;font-size:10px">驗證方法取決於假設的類型</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#07</span>PO 和工程師意見不一致</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 2 插話 + Step 3 追問</span></div><div style="color:#5F5E5A">先問工程師最壞情況，再翻譯給 PO，讓 PO 做決定</div><div style="color:#854F0B;font-size:10px">公司文化決定 TPM 介入的深度</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#08</span>討論內容你完全聽不懂</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 2 聽不懂時怎麼辦</span></div><div style="color:#5F5E5A">拉回使用者影響層面，或先記關鍵詞會議後補課</div><div style="color:#854F0B;font-size:10px">工程師對非技術解釋的配合度</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#09</span>決定在會議中沒有被解決</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 2 會議後追蹤</span></div><div style="color:#5F5E5A">記進流水帳：待決定 + 誰負責 + 預計回覆時間</div><div style="color:#854F0B;font-size:10px">追蹤頻率取決於決定的緊急程度</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#10</span>工程師說「這個需求做不到」</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 2 插話 + Step 3 追問</span></div><div style="color:#5F5E5A">先澄清「做不到」的意思，再找中間解法</div><div style="color:#854F0B;font-size:10px">技術可行性需要一定領域知識</div></div>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#712B13;padding:.3rem .5rem;margin:.5rem 0 4px;border-left:3px solid #F0997B">遇到問題 / 主管問你</div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#11</span>主管問你一個你知道答案的問題</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 3 照流程走</span></div><div style="color:#5F5E5A">打開邏輯地圖確認假設 → 第一層追問 → 跟主管說影響</div><div style="color:#854F0B;font-size:10px">主管風格決定報告的深度</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#12</span>邏輯地圖有，但標注「待確認」</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 3 + 告訴主管需要確認</span></div><div style="color:#5F5E5A">不要猜，告訴主管你需要多少時間確認</div><div style="color:#854F0B;font-size:10px">主管容忍度決定你說「不知道」的方式</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#13</span>邏輯地圖完全沒有這個資訊</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 3 + 跨部門快速確認</span></div><div style="color:#5F5E5A">一句話說清楚背景，三分鐘跨部門確認</div><div style="color:#854F0B;font-size:10px">跨部門關係影響確認效率</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#14</span>工程師一直給技術答案</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 3 第一/二層追問</span></div><div style="color:#5F5E5A">第一層追問 → 第二層追問 → 最後一招</div><div style="color:#854F0B;font-size:10px">不同工程師需要不同的追問策略</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#15</span>假設驗證是錯的，但 PM 不接受</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 3 + 量化風險給 PM</span></div><div style="color:#5F5E5A">量化風險 → 提出降低風險的最小可行方案</div><div style="color:#854F0B;font-size:10px">PM 決策風格決定怎麼呈現風險</div></div>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#712B13;padding:.3rem .5rem;margin:.5rem 0 4px;border-left:3px solid #F0997B">突發狀況</div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#16</span>專案中途被要求大改方向</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 1 重做 + Step 4 全面審查</span></div><div style="color:#5F5E5A">先重寫「一句話說清楚」，再逐一審查每個假設</div><div style="color:#854F0B;font-size:10px">改變幅度決定哪些 Step 需要完整重做</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#17</span>你不在時有人做了重大決定</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">補課路徑（順序很重要）</span></div><div style="color:#5F5E5A">工程師 → 會議記錄 → PO → 更新地圖 → 主管</div><div style="color:#854F0B;font-size:10px">補課深度取決於決定的重要程度</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#18</span>同時負責多個專案，記錄混亂</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 2 + Step 4 各專案獨立</span></div><div style="color:#5F5E5A">每個專案獨立邏輯地圖 + 流水帳加專案標籤</div><div style="color:#854F0B;font-size:10px">每個專案的 refine 頻率可能不同</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#19</span>一個 bug 同時影響兩個專案</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 3 + 兩個邏輯地圖對照</span></div><div style="color:#5F5E5A">分別打開兩個邏輯地圖 → 判斷是否同根本原因</div><div style="color:#854F0B;font-size:10px">跨專案溝通可能需要不同主管知情</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#20</span>一個假設被推翻，連鎖反應</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 4 逐一審查假設連鎖</span></div><div style="color:#5F5E5A">往上往下追假設依賴關係 → 跟 PM 說連鎖影響</div><div style="color:#854F0B;font-size:10px">假設樹複雜程度取決於專案規模</div></div>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#712B13;padding:.3rem .5rem;margin:.5rem 0 4px;border-left:3px solid #F0997B">邏輯地圖維護</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#21</span>Kickoff 訪談後建立邏輯地圖初版</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 4 建立初版 Prompt</span></div><div style="color:#5F5E5A">訪談筆記 → 建立初版 Prompt → 審閱 → 存進 repo</div><div style="color:#854F0B;font-size:10px">專案類型影響哪些欄位最重要</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#22</span>週五用流水帳更新邏輯地圖</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 4 每週更新 Prompt</span></div><div style="color:#5F5E5A">跟 Claude 說一句話讀取兩個檔案 → 更新 report.md → 清空 log.md</div><div style="color:#854F0B;font-size:10px">沒有重大決定的週可以跳過</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#23</span>新 PM 加入，用邏輯地圖幫她了解專案</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 4 邏輯地圖當交接文件</span></div><div style="color:#5F5E5A">邏輯地圖當 onboarding 文件 → 30 分鐘對齊 → 重新量化成功定義</div><div style="color:#854F0B;font-size:10px">新 PM 背景決定需要解釋多少</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 2fr 2fr;gap:6px;align-items:start;background:#F9F8F6;border-radius:7px;padding:.5rem .75rem;font-size:11px"><div style="font-weight:500;color:#444441"><span style="background:#993C1D;color:white;border-radius:4px;padding:1px 6px;font-size:10px;margin-right:6px;font-weight:600">#24</span>邏輯地圖越來越大，難以維護</div><div><span style="background:#FAECE7;color:#993C1D;padding:1px 5px;border-radius:4px;font-size:10px">Step 4 邏輯地圖精簡</span></div><div style="color:#5F5E5A">按三個時機精簡：功能上線後、假設驗證後、方向大改後</div><div style="color:#854F0B;font-size:10px">以「15 分鐘能讀完」為基準</div></div>
+          </div>
+        </div>
+      </details>
+
+      <!-- Step 1: Kickoff -->
+      <div style="border:1px solid #F0997B;border-radius:10px;overflow:hidden;margin-bottom:10px">
+        <div style="background:#FAECE7;padding:.6rem 1rem;font-size:12px;font-weight:600;color:#993C1D">
+          Step 1：新專案第一週｜找 PM 或主管做 Kickoff
+        </div>
+        <div style="padding:.875rem 1rem">
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px"><strong style="color:#993C1D">問誰：</strong>PM 或直接主管｜<strong style="color:#993C1D">什麼時候：</strong>加入新專案的第一週內，花 30 分鐘</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div style="background:white;border:1px solid #F0997B;border-radius:8px;padding:.75rem 1rem;font-size:11px;color:var(--text-secondary)">
+              <div style="font-weight:600;color:#712B13;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #F0C9B5">為什麼做</div>
+              → 「不做的話會發生什麼？」<br>
+              → 「跟今年優先目標有什麼關係？」<br>
+              → 「為什麼現在做，不是六個月後？」
+            </div>
+            <div style="background:white;border:1px solid #F0997B;border-radius:8px;padding:.75rem 1rem;font-size:11px;color:var(--text-secondary)">
+              <div style="font-weight:600;color:#712B13;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #F0C9B5">做什麼</div>
+              → 「結束時要交付什麼？」<br>
+              → 「什麼是不做的？邊界在哪？」<br>
+              → 「如果有爭議，最後誰說了算？」<br>
+              → 「這件事做起來，哪些其他 team 會被影響到？」<br>
+              → 「這個設計方向是怎麼決定的？有沒有考慮過其他方式？」
+            </div>
+            <div style="background:white;border:1px solid #F0997B;border-radius:8px;padding:.75rem 1rem;font-size:11px;color:var(--text-secondary)">
+              <div style="font-weight:600;color:#712B13;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #F0C9B5">成功定義</div>
+              <span style="font-size:10px;background:#993C1D;color:white;border-radius:4px;padding:1px 6px;margin-right:4px">Business Value</span>「這個專案做完，對業務最直接的影響是什麼？」<br>
+              → 「有沒有可以量測的數字？比如省多少時間、提升多少效率？」<br>
+              <span style="font-size:10px;background:#993C1D;color:white;border-radius:4px;padding:1px 6px;margin-right:4px">Justification</span>「我們怎麼知道這個方向是對的？有沒有驗證過？」<br>
+              → 「stakeholder 最在意的是什麼？」
+            </div>
+            <div style="background:white;border:1px solid #F0997B;border-radius:8px;padding:.75rem 1rem;font-size:11px;color:var(--text-secondary)">
+              <div style="font-weight:600;color:#712B13;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #F0C9B5">風險在哪</div>
+              → 「這個專案能成功，最關鍵的前提是什麼？」<br>
+              → 「哪個地方你最擔心出問題？」<br>
+              → 「以前有沒有人試過類似的東西？如果有，為什麼沒有成功？」<br>
+              → 「有哪些事情不是我們能決定，但會影響結果的？」<br>
+              → 「以前有沒有類似的系統存在？現在還在用嗎？」
+            </div>
+          </div>
+          <div style="background:#E1F5EE;border:1px solid #9FE1CB;border-radius:7px;padding:.5rem .8rem;font-size:11px;color:#0F6E56;font-weight:500">✅ 完成後：把原始訪談記錄存進 kickoff.md → 貼進建立初版 Prompt → 把 AI 產出的邏輯地圖存進 report.md → 建立空白 log.md</div>
+        </div>
+      </div>
+
+      <!-- Step 2: Refine -->
+      <div style="border:1px solid #F0997B;border-radius:10px;overflow:hidden;margin-bottom:10px">
+        <div style="background:#FAECE7;padding:.6rem 1rem;font-size:12px;font-weight:600;color:#993C1D">
+          Step 2：每週 Refine 會議｜問誰：PO
+        </div>
+        <div style="padding:.875rem 1rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+            <div style="background:white;border:1px solid #F0997B;border-radius:7px;padding:.75rem;font-size:11px;color:var(--text-secondary)">
+              <div style="font-weight:600;color:#712B13;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #F0C9B5">會議前（5 分鐘）</div>
+              → 打開邏輯地圖<br>
+              → 上週有未解決的問題？<br>
+              → 有沒有假設需要被驗證？<br>
+              → 這週要搞清楚什麼？
+            </div>
+            <div style="background:#FEF0EA;border:1.5px solid #F0997B;border-radius:7px;padding:.75rem;font-size:11px;color:#993C1D">
+              <div style="font-weight:600;color:#712B13;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #F0997B">會議中（插話時機）</div>
+              PO 說「決定 XXX」時進場：<br>
+              → 「假設是 XXX，對嗎？」<br>
+              → 「假設錯了影響哪裡？」<br>
+              → 「會影響其他功能嗎？」<br><br>
+              不知道假設時：<br>
+              → 「這個決定背後最重要的考量是什麼？」<br><br>
+              討論太快跟不上時：<br>
+              → 「我確認一下——影響是 XXX，對嗎？」<br><br>
+              發現假設未驗證時：<br>
+              → 「這個假設我們有沒有驗證過？」<br>
+              → 如果沒有：「我們要怎麼驗證它？可以排進下週的行動項目嗎？」<br>
+              → 把驗證行動記進會議後的流水帳
+            </div>
+            <div style="background:white;border:1px solid #F0997B;border-radius:7px;padding:.75rem;font-size:11px;color:var(--text-secondary)">
+              <div style="font-weight:600;color:#712B13;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #F0C9B5">會議後（10 分鐘）</div>
+              記下：<br>
+              → 決定是什麼<br>
+              → 原因（假設）<br>
+              → 影響範圍<br>
+              → 還沒解決的問題<br><br>
+              <strong>決定在會議中沒有被解決時：</strong><br>
+              → 記進流水帳：「待決定：XXX，由誰確認，預計回覆時間：XXX」<br>
+              → 主動追蹤，下次 refine 前確認有沒有答案
+            </div>
+          </div>
+          <div style="background:#E6F1FB;border-radius:7px;padding:.5rem .8rem;font-size:11px;color:#0C447C;font-weight:500">🔵 週五：把流水帳貼給 AI → 更新邏輯地圖 → 存回 repo → 下週前先看一遍</div>
+        </div>
+      </div>
+
+      <!-- Step 3: 遇到問題 -->
+      <div style="border:1px solid #F0997B;border-radius:10px;overflow:hidden;margin-bottom:10px">
+        <div style="background:#FAECE7;padding:.6rem 1rem;font-size:12px;font-weight:600;color:#993C1D">
+          Step 3：遇到問題 / 主管問你｜問誰：工程師
+        </div>
+        <div style="padding:.875rem 1rem;background:#FAECE7;display:flex;flex-direction:column;gap:0">
+
+          <div style="background:#FEF3E2;border:1px dashed #F5C882;border-radius:8px;padding:.75rem 1rem;margin-bottom:16px">
+            <div style="font-size:11px;font-weight:500;color:#633806;margin-bottom:4px">⚠️ 邏輯地圖還不存在？先做這個（問誰：工程師或 PO）</div>
+            <div style="font-size:11px;color:#854F0B;line-height:1.8">
+              → 「我剛接手這個專案，想花 30 分鐘請你幫我搞清楚這個專案在做什麼、為什麼這樣做，可以嗎？」<br>
+              → 「這個專案能成功，最關鍵的前提是什麼？」<br>
+              → 「目前最容易出問題的地方在哪？」<br>
+              → 「方向有沒有調整過？如果有，原來的 timeline 和成功定義有沒有跟著更新？」
+            </div>
+            <div style="background:white;border:1px solid #F5C882;border-radius:7px;padding:.6rem .8rem;margin-top:8px;font-size:11px;color:#633806">
+              <strong>發現 timeline 或成功定義沒有跟著更新時：</strong><br>
+              找 PM 或主管重新對齊期望，不要自己默默修改。<br>
+              「方向調整了，但 timeline 和成功定義還沒更新，我覺得我們需要重新對齊，你有時間嗎？」
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:stretch">
+            <div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">
+              <div style="width:28px;height:28px;border-radius:50%;background:#993C1D;color:white;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center">1</div>
+              <div style="width:2px;flex:1;background:#F0997B;margin:4px 0"></div>
+            </div>
+            <div style="flex:1;padding-bottom:16px">
+              <div style="background:white;border:1px solid #F0997B;border-radius:8px;padding:.75rem 1rem">
+                <div style="font-size:12px;font-weight:500;color:#712B13;margin-bottom:4px">打開邏輯地圖</div>
+                <div style="font-size:11px;color:#5F5E5A">確認這個問題影響的是哪個假設，不要靠記憶</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:stretch">
+            <div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">
+              <div style="width:28px;height:28px;border-radius:50%;background:#993C1D;color:white;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center">2</div>
+              <div style="width:2px;flex:1;background:#F0997B;margin:4px 0"></div>
+            </div>
+            <div style="flex:1;padding-bottom:8px">
+              <div style="background:white;border:1px solid #F0997B;border-radius:8px;padding:.75rem 1rem">
+                <div style="font-size:12px;font-weight:500;color:#712B13;margin-bottom:4px">第一層追問（先試這個）</div>
+                <div style="font-size:11px;color:#993C1D;line-height:1.8">
+                  → 「所以對我們的專案目標來說，這代表什麼？」<br>
+                  → 「這個問題如果不修，使用者或流程會看到什麼？」<br>
+                  → 「這個問題影響的是我們哪個假設？」
+                </div>
+              </div>
+              <div style="background:white;border:1.5px solid #F0997B;border-radius:8px;padding:.5rem 1rem;margin-top:6px;display:flex;align-items:flex-start;gap:8px">
+                <span style="font-size:14px;flex-shrink:0">🔀</span>
+                <div style="font-size:11px;color:#5F5E5A;line-height:1.7">
+                  工程師給了邏輯答案？<strong style="color:#0F6E56">→ 直接跳到步驟 4</strong><br>
+                  工程師還是給技術答案？<strong style="color:#993C1D">→ 繼續第二層追問</strong>
+                </div>
+              </div>
+              <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:8px;padding:.5rem 1rem;margin-top:6px">
+                <div style="font-size:11px;font-weight:500;color:#712B13;margin-bottom:4px">PO 和工程師意見不一致時</div>
+                <div style="font-size:11px;color:#993C1D;line-height:1.7">
+                  TPM 的角色：把假設說清楚、把風險量化、讓 PO 做最終決定——不是你來決定<br>
+                  → 先問工程師：「如果這樣做，最壞的情況是什麼？影響多少人？」<br>
+                  → 再翻譯給 PO：「X% 的使用者可能會 YYY，這個風險你可以接受嗎？」
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:stretch">
+            <div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">
+              <div style="width:28px;height:28px;border-radius:50%;background:#993C1D;color:white;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center">3</div>
+              <div style="width:2px;flex:1;background:#F0997B;margin:4px 0"></div>
+            </div>
+            <div style="flex:1;padding-bottom:16px">
+              <div style="background:white;border:1px solid #F0997B;border-radius:8px;padding:.75rem 1rem">
+                <div style="font-size:12px;font-weight:500;color:#712B13;margin-bottom:4px">第二層追問（步驟 2 不管用時才用）</div>
+                <div style="font-size:11px;color:#993C1D;line-height:1.8">
+                  → 「假設我要跟主管解釋，我應該怎麼說？」<br>
+                  → 「這個問題最壞的情況是什麼？對 timeline 有什麼影響？」<br>
+                  → 「這個問題是流程問題還是設計問題？」
+                </div>
+                <div style="background:#F5C4B3;border-radius:6px;padding:.4rem .75rem;margin-top:8px;font-size:11px;color:#712B13">
+                  最後一招：「我需要的不是技術原因，而是對 timeline 和品質的影響，你可以幫我用這個角度說嗎？」
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:stretch">
+            <div style="display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0">
+              <div style="width:28px;height:28px;border-radius:50%;background:#0C447C;color:white;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center">4</div>
+              <div style="width:2px;flex:1;background:#8DC4EF;margin:4px 0"></div>
+            </div>
+            <div style="flex:1;padding-bottom:16px">
+              <div style="background:white;border:1px solid #8DC4EF;border-radius:8px;padding:.75rem 1rem">
+                <div style="font-size:12px;font-weight:500;color:#0C447C;margin-bottom:4px">跟主管說影響和風險</div>
+                <div style="font-size:11px;color:#185FA5;line-height:1.8">
+                  格式：<strong>問題是什麼</strong> + <strong>解法是什麼</strong> + <strong>你需要主管做什麼決定</strong><br><br>
+                  範例：「目前有 XXX 問題。我建議 YYY。你覺得這樣可以嗎？」<br><br>
+                  需要技術說明時：「技術細節我請工程師來說明，但影響是 XXX，我們在做 YYY，你需不需要做什麼決定？」<br><br>
+                  <strong>邏輯地圖裡也是「待確認」時：</strong><br>
+                  不要猜。直接說：「我現在不知道，但我可以在 X 小時內給你答案。你需要答案的時間是什麼時候？」<br><br>
+                  <strong>跨部門快速確認時：</strong><br>
+                  一句話說清楚背景和需求，控制在三分鐘內。<br>
+                  「我負責 XXX 專案，聽說你們在做 YYY，想確認我們的 ZZZ 和你們有沒有衝突，你有三分鐘可以說一下嗎？」
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:center">
+            <div style="width:28px;height:28px;border-radius:50%;background:#0F6E56;color:white;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0">✓</div>
+            <div style="flex:1">
+              <div style="background:white;border:1px solid #9FE1CB;border-radius:8px;padding:.6rem 1rem">
+                <div style="font-size:11px;font-weight:500;color:#0F6E56">事後：把新發現的邏輯更新進邏輯地圖，地圖越來越完整</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Step 4: 邏輯地圖模板 -->
+      <div style="border:1px solid #F0997B;border-radius:10px;overflow:hidden;margin-bottom:10px">
+        <div style="background:#FAECE7;padding:.6rem 1rem;font-size:12px;font-weight:600;color:#993C1D">
+          Step 4：邏輯地圖維護 SOP｜貫穿整個流程
+        </div>
+        <div style="padding:.875rem 1rem;background:#FAECE7;display:flex;flex-direction:column;gap:12px">
+
+          <!-- 三個檔案 -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div style="background:white;border:1px solid #D3D1C7;border-radius:8px;padding:.75rem">
+              <div style="font-size:11px;font-weight:600;color:#444441;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #D3D1C7">📄 kickoff.md</div>
+              <div style="font-size:11px;color:#5F5E5A;line-height:1.8">Kickoff 原始訪談記錄<br><br>存一次，備查用<br>不需要更新</div>
+            </div>
+            <div style="background:white;border:1.5px solid #F0997B;border-radius:8px;padding:.75rem">
+              <div style="font-size:11px;font-weight:600;color:#712B13;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #F0997B">📄 report.md</div>
+              <div style="font-size:11px;color:#993C1D;line-height:1.8">整理後的邏輯地圖<br><br>每週五更新<br>永遠是最新版本</div>
+            </div>
+            <div style="background:#FEF3E2;border:1px solid #F5C882;border-radius:8px;padding:.75rem">
+              <div style="font-size:11px;font-weight:600;color:#633806;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #F5C882">📄 log.md</div>
+              <div style="font-size:11px;color:#854F0B;line-height:1.8">每週新發生的事<br><br>每天加一條（30 秒）<br>每週五清空</div>
+            </div>
+          </div>
+
+          <!-- 流程圖 SVG -->
+          <div style="background:white;border:1px solid #D3D1C7;border-radius:8px;padding:.75rem">
+            <div style="font-size:11px;font-weight:600;color:#444441;margin-bottom:8px">完整 SOP 流程</div>
+            <svg width="100%" viewBox="0 0 640 340" role="img">
+              <title>邏輯地圖維護 SOP 流程圖</title>
+              <defs><marker id="arr4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+              <!-- 一次性設定 -->
+              <text font-family="inherit" font-size="10" font-weight="500" fill="#5F5E5A" x="20" y="18">一次性設定（Kickoff 當天）</text>
+              <rect x="10" y="26" width="108" height="40" rx="6" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="10" font-weight="500" fill="#444441" x="64" y="42" text-anchor="middle">Kickoff 訪談結束</text>
+              <text font-family="inherit" font-size="9" fill="#5F5E5A" x="64" y="56" text-anchor="middle">記下原始筆記</text>
+              <line x1="118" y1="46" x2="134" y2="46" stroke="#888780" stroke-width="1.5" marker-end="url(#arr4)" fill="none"/>
+              <rect x="138" y="26" width="108" height="40" rx="6" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="10" font-weight="500" fill="#444441" x="192" y="42" text-anchor="middle">存進 kickoff.md</text>
+              <text font-family="inherit" font-size="9" fill="#5F5E5A" x="192" y="56" text-anchor="middle">備查用，不再更動</text>
+              <line x1="246" y1="46" x2="262" y2="46" stroke="#888780" stroke-width="1.5" marker-end="url(#arr4)" fill="none"/>
+              <rect x="266" y="26" width="108" height="40" rx="6" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="10" font-weight="500" fill="#712B13" x="320" y="40" text-anchor="middle">貼進建立初版 Prompt</text>
+              <text font-family="inherit" font-size="9" fill="#993C1D" x="320" y="52" text-anchor="middle">Step 1 訪談記錄 → AI</text>
+              <text font-family="inherit" font-size="9" fill="#993C1D" x="320" y="62" text-anchor="middle">整理成邏輯地圖</text>
+              <line x1="374" y1="46" x2="392" y2="46" stroke="#888780" stroke-width="1.5" marker-end="url(#arr4)" fill="none"/>
+              <rect x="394" y="26" width="108" height="40" rx="6" fill="#FAECE7" stroke="#F0997B" stroke-width="1"/>
+              <text font-family="inherit" font-size="10" font-weight="500" fill="#712B13" x="448" y="42" text-anchor="middle">存進 report.md</text>
+              <text font-family="inherit" font-size="9" fill="#993C1D" x="448" y="56" text-anchor="middle">邏輯地圖初版完成</text>
+              <line x1="502" y1="46" x2="520" y2="46" stroke="#888780" stroke-width="1.5" marker-end="url(#arr4)" fill="none"/>
+              <rect x="522" y="26" width="108" height="40" rx="6" fill="#FEF3E2" stroke="#F5C882" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="10" font-weight="500" fill="#633806" x="576" y="42" text-anchor="middle">建立空白 log.md</text>
+              <text font-family="inherit" font-size="9" fill="#854F0B" x="576" y="56" text-anchor="middle">等下週開始記錄</text>
+
+              <!-- 分隔線 -->
+              <line x1="10" y1="82" x2="630" y2="82" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="4 3"/>
+
+              <!-- 每天 -->
+              <text font-family="inherit" font-size="10" font-weight="500" fill="var(--text-secondary)" x="20" y="98">每天（30 秒）</text>
+              <rect x="10" y="100" width="210" height="54" rx="6" fill="#FEF3E2" stroke="#F5C882" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="10" font-weight="500" fill="#633806" x="105" y="116" text-anchor="middle">打開 log.md，加一條記錄</text>
+              <text font-family="inherit" font-size="9" fill="#854F0B" x="105" y="130" text-anchor="middle">格式不重要，直接寫就好</text>
+              <text font-family="inherit" font-size="9" fill="#854F0B" x="105" y="144" text-anchor="middle">來源：Step 2 Refine 後 / Step 3 遇問題後</text>
+
+              <!-- log 範例 -->
+              <rect x="228" y="100" width="400" height="52" rx="6" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="9" fill="#5F5E5A" x="244" y="116">log.md 範例：</text>
+              <text font-family="inherit" font-size="9" fill="#5F5E5A" x="244" y="130">週二 3pm：Kevin 說數據格式上個月改過一次</text>
+              <text font-family="inherit" font-size="9" fill="#5F5E5A" x="244" y="144">週三 Refine：決定先做搜尋功能</text>
+
+              <!-- 分隔線 -->
+              <line x1="10" y1="168" x2="630" y2="168" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="4 3"/>
+
+              <!-- 每週五 -->
+              <text font-family="inherit" font-size="10" font-weight="500" fill="var(--text-secondary)" x="20" y="184">每週五（5 分鐘）</text>
+
+              <rect x="10" y="192" width="140" height="40" rx="6" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="10" font-weight="500" fill="#712B13" x="80" y="208" text-anchor="middle">跟 Claude 說一句話</text>
+              <text font-family="inherit" font-size="9" fill="#993C1D" x="80" y="222" text-anchor="middle">讀取兩個檔案更新</text>
+              <line x1="150" y1="212" x2="168" y2="212" stroke="#888780" stroke-width="1.5" marker-end="url(#arr4)" fill="none"/>
+
+              <rect x="170" y="192" width="140" height="40" rx="6" fill="#FAECE7" stroke="#F0997B" stroke-width="1"/>
+              <text font-family="inherit" font-size="10" font-weight="500" fill="#712B13" x="240" y="208" text-anchor="middle">Claude 更新 report.md</text>
+              <text font-family="inherit" font-size="9" fill="#993C1D" x="240" y="222" text-anchor="middle">標注「本週更新」</text>
+              <line x1="310" y1="212" x2="328" y2="212" stroke="#888780" stroke-width="1.5" marker-end="url(#arr4)" fill="none"/>
+
+              <rect x="330" y="192" width="140" height="40" rx="6" fill="#FEF3E2" stroke="#F5C882" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="10" font-weight="500" fill="#633806" x="400" y="208" text-anchor="middle">Claude 清空 log.md</text>
+              <text font-family="inherit" font-size="9" fill="#854F0B" x="400" y="222" text-anchor="middle">留標題和下週週次</text>
+              <line x1="470" y1="212" x2="488" y2="212" stroke="#888780" stroke-width="1.5" marker-end="url(#arr4)" fill="none"/>
+
+              <rect x="490" y="192" width="140" height="40" rx="6" fill="#E1F5EE" stroke="#9FE1CB" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="10" font-weight="500" fill="#0F6E56" x="560" y="208" text-anchor="middle">你確認一遍</text>
+              <text font-family="inherit" font-size="9" fill="#1D9E75" x="560" y="222" text-anchor="middle">有沒有漏掉或錯誤</text>
+
+              <!-- 循環箭頭 -->
+              <text font-family="inherit" font-size="9" fill="var(--text-muted)" x="320" y="258" text-anchor="middle">↓ 下週一重新開始在 log.md 加記錄</text>
+
+              <!-- 底部節奏說明 -->
+              <rect x="10" y="268" width="108" height="30" rx="5" fill="#FEF3E2" stroke="#F5C882" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="9" fill="#854F0B" x="64" y="287" text-anchor="middle">週一～四：記 log.md</text>
+              <line x1="118" y1="283" x2="166" y2="283" stroke="var(--border)" stroke-width="1" marker-end="url(#arr4)" fill="none"/>
+              <rect x="168" y="268" width="108" height="30" rx="5" fill="#FEF3E2" stroke="#F5C882" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="9" fill="#854F0B" x="222" y="287" text-anchor="middle">週一～四：記 log.md</text>
+              <line x1="276" y1="283" x2="324" y2="283" stroke="var(--border)" stroke-width="1" marker-end="url(#arr4)" fill="none"/>
+              <rect x="326" y="268" width="108" height="30" rx="5" fill="#FEF3E2" stroke="#F5C882" stroke-width="0.5"/>
+              <text font-family="inherit" font-size="9" fill="#854F0B" x="380" y="287" text-anchor="middle">週一～四：記 log.md</text>
+              <line x1="434" y1="283" x2="482" y2="283" stroke="var(--border)" stroke-width="1" marker-end="url(#arr4)" fill="none"/>
+              <rect x="484" y="268" width="148" height="30" rx="5" fill="#FAECE7" stroke="#F0997B" stroke-width="1"/>
+              <text font-family="inherit" font-size="9" fill="#712B13" x="558" y="287" text-anchor="middle">週五：Claude 更新 + 清空</text>
+            </svg>
+          </div>
+
+          <!-- 特殊更新時機 + 確認標準 -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:#FEF3E2;border:1px solid #F5C882;border-radius:8px;padding:.75rem">
+              <div style="font-size:11px;font-weight:600;color:#633806;margin-bottom:6px">不用等週五，立刻更新 report.md 的時機</div>
+              <div style="font-size:11px;color:#854F0B;line-height:1.9">
+                → 專案大改方向<br>
+                → 重要假設被推翻<br>
+                → 主管突然問你，打開地圖發現過期了
+              </div>
+            </div>
+            <div style="background:#E1F5EE;border:1px solid #9FE1CB;border-radius:8px;padding:.75rem">
+              <div style="font-size:11px;font-weight:600;color:#0F6E56;margin-bottom:6px">週五確認一遍，看這三件事</div>
+              <div style="font-size:11px;color:#1D9E75;line-height:1.9">
+                → 有沒有「待確認」欄位應該更新了？<br>
+                → 假設的驗證狀態有沒有更新對？<br>
+                → 還沒釐清的問題有沒有解決的可以劃掉？
+              </div>
+            </div>
+          </div>
+
+          <!-- 建立初版 Prompt -->
+          <div style="background:white;border:1px solid #F0997B;border-radius:8px;overflow:hidden">
+            <div style="background:#FAECE7;padding:.5rem .875rem;font-size:11px;font-weight:600;color:#712B13">Kickoff 當天｜建立初版 Prompt</div>
+            <div style="padding:.75rem;font-size:10px;color:#993C1D;line-height:1.8;font-family:monospace;white-space:pre-wrap;background:white">角色：你是一個資深 TPM，專長是把模糊的資訊整理成清楚的專案邏輯。
+
+任務：幫我把下方的訪談筆記，整理成一份「專案邏輯地圖」。
+
+注意事項：
+- 用我能理解的語言寫，不要用技術術語
+- 核心假設要寫「如果這個假設錯了，會影響什麼」
+- 功能邏輯要說明「為什麼這樣設計，不是那樣設計」
+- 如果筆記裡沒有足夠資訊填某個欄位，請在該欄位標注「待確認」
+- 如果發現有遺漏的重要問題，請列在「還沒釐清的問題」
+
+輸出格式：
+## 一句話說清楚這個專案
+
+## 為什麼要做
+- 如果不做，會發生什麼事：
+- Business Value（做完之後，對業務的具體影響）：
+- 量測指標（怎麼知道達到了）：
+- Justification（為什麼這個方向是對的）：
+- stakeholder 最在意的是：
+
+## 核心假設清單
+| 假設 | 如果假設錯了，影響是什麼 | 驗證狀態 |
+
+## 功能邏輯
+### 功能名稱
+- 在做什麼：
+- 為什麼這樣設計（不是那樣設計）：
+- 有沒有考慮過其他方式？為什麼沒有選：
+- 依賴關係：
+- 核心假設：
+
+## 目前最大的風險
+- 風險：
+- 發生的可能性：高 / 中 / 低
+- 如果發生，影響是：
+- 目前的緩解方式：
+
+## 還沒釐清的問題
+- [ ] 問題（誰需要回答？）
+
+語言：繁體中文
+
+---
+以下是我的訪談筆記：
+
+【貼上訪談筆記，格式不重要，直接貼就好】</div>
+          </div>
+
+          <!-- 每週五 Prompt -->
+          <div style="background:white;border:1px solid #F0997B;border-radius:8px;overflow:hidden">
+            <div style="background:#FAECE7;padding:.5rem .875rem;font-size:11px;font-weight:600;color:#712B13">每週五｜說一句話給 Claude</div>
+            <div style="padding:.75rem;font-size:10px;color:#993C1D;line-height:1.8;font-family:monospace;white-space:pre-wrap;background:white">「請讀取 mi-personal-notes/logic_map/專案名稱_report.md 和 專案名稱_log.md，根據 log 更新邏輯地圖。
+規則：
+- 有變動的內容，在該行後面加上『本週更新』
+- 新增的假設或風險，直接加在對應清單裡
+- 發現矛盾或需要確認的地方，加進『還沒釐清的問題』
+- 沒有變動的部分保持原樣
+- 更新完後在最上面寫『上次更新：今天的日期』
+更新完後存回 專案名稱_report.md，然後清空 專案名稱_log.md，只留標題和下週週次。」</div>
+            <div style="background:#FEF3E2;padding:.5rem .875rem;font-size:11px;color:#633806;border-top:1px solid #F5C882">
+              ⚠️ 更新完後你要確認一遍：有沒有漏掉的？有沒有更新錯的？確認後才算完成。
+            </div>
+          </div>
+
+          <!-- 填好的範例 -->
+          <details>
+            <summary style="font-size:11px;font-weight:600;color:#712B13;cursor:pointer;padding:.5rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">看填好的範例（HBM3E Dashboard）</summary>
+            <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem;font-size:11px;color:var(--text-secondary);line-height:1.9" onclick="event.stopPropagation()">
+              <div style="font-weight:600;color:#993C1D;margin-bottom:8px">HBM3E Validation Dashboard｜邏輯地圖</div>
+              <div style="margin-bottom:8px"><strong style="color:#993C1D">一句話：</strong>幫 Engineering Leadership（5-6 人）隨時自助查看 HBM3E validation 進度，讓 leadership 能即時判斷 tapeout 風險。</div>
+              <div style="margin-bottom:8px"><strong style="color:#993C1D">核心假設：</strong><br>
+                ✅ Leadership 每天會主動查看 → 已驗證（Sarah 確認）<br>
+                ⚠️ Validation data 可以結構化匯入 → 有疑慮（格式每次可能不同）<br>
+                ✅ 不需要複雜的權限管理 → 已驗證
+              </div>
+              <div style="margin-bottom:8px"><strong style="color:#993C1D">最大的風險：</strong><br>
+                🔴 Data 格式不一致 → Ray 需要手動整理，長期不可持續<br>
+                🟡 風險指標判斷標準沒共識 → Phase 2 前需跟 Sarah 對齊
+              </div>
+              <div><strong style="color:#993C1D">還沒釐清的問題：</strong><br>
+                ☐ Tapeout 風險指標的判斷標準？（Sarah 需要確認）<br>
+                ☐ Data 格式可以標準化嗎？（Kevin 需要確認）
+              </div>
+            </div>
+          </details>
+
+          <!-- Repo 路徑 -->
+          <div style="background:#FAECE7;border-radius:7px;padding:.5rem .875rem;font-size:11px;color:#993C1D;font-family:monospace">
+            mi-personal-notes/logic_map/<br>
+            &nbsp;&nbsp;├── 專案名稱_kickoff.md　（原始訪談，備查）<br>
+            &nbsp;&nbsp;├── 專案名稱_report.md　 （邏輯地圖，每週更新）<br>
+            &nbsp;&nbsp;└── 專案名稱_log.md　　  （流水帳，每週清空）
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 情境詳細說明 -->
+      <div style="border:1px solid #F0997B;border-radius:10px;overflow:hidden">
+        <div style="background:#FAECE7;padding:.6rem 1rem;font-size:12px;font-weight:600;color:#993C1D">
+          情境詳細說明｜點開查看每個情境的完整做法
+        </div>
+        <div style="padding:.875rem 1rem;background:#FAECE7;display:flex;flex-direction:column;gap:16px">
+
+          <!-- 進入新專案 -->
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#712B13;padding:.4rem .75rem;background:#F5C4B3;border-radius:6px;margin-bottom:8px">進入新專案</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  🌫️ PM 答案很模糊，問不出具體答案
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;margin-bottom:8px;color:#993C1D">
+                    PM 答案模糊時，不要繼續問下一個問題——先停下來幫 PM 具體化答案
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">方法一：舉例法</strong><br>「可以舉一個具體的例子嗎？比如說工程師現在碰到什麼不方便？」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">方法二：對比法</strong><br>「如果這個做完之後，跟現在最大的不同會是什麼？」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">方法三：量化法</strong><br>「有沒有辦法變成一個數字？比如說花多少時間，或是錯誤率降低多少？」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">三個都試了還是很模糊時：</strong><br>
+                      → 把你的理解說出來讓 PM 確認：「我現在理解的是 XXX，你覺得這樣說對嗎？」<br>
+                      → 把待確認的地方記進邏輯地圖，下次 refine 時再確認
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  🗂️ 接手進行中的專案，有舊記錄
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 1：先讀舊記錄</strong><br>不要讓別人幫你總結，自己讀原始的文件、會議記錄、或舊的邏輯地圖
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 2：用補課路徑確認哪些假設還成立</strong><br>「這個專案能成功，最關鍵的前提是什麼？這些前提現在還成立嗎？」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 3：建立或更新邏輯地圖</strong><br>如果有舊地圖，用新的訪談結果更新。如果沒有，從頭建立初版。
+                    </div>
+                    <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9;color:#993C1D">
+                      ⚠️ 客製化提示：舊記錄品質差時，補課的深度要加重。特別注意有沒有「已被推翻的假設」沒有人更新過。
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  🚪 Kickoff 做完，PM 突然離職
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;margin-bottom:8px;color:#993C1D">
+                    邏輯地圖在這個時候的價值最大——它是讓新 PM 快速上手的保險
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 1：把邏輯地圖作為 onboarding 文件給新 PM</strong><br>「這是我維護的專案邏輯地圖，記錄了這個專案的為什麼、做什麼、核心假設和目前的風險。你可以先看一遍，然後我們花 30 分鐘對齊。」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 2：重新確認每個欄位</strong><br>特別注意標注「待確認」或「未驗證」的地方，這些是最需要新 PM 確認的部分
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 3：趁機重新量化成功定義</strong><br>「前任 PM 的成功定義比較模糊，我們能不能把它變成一個可以量測的指標？」
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+            </div>
+          </div>
+
+          <!-- 每週 Refine -->
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#712B13;padding:.4rem .75rem;background:#F5C4B3;border-radius:6px;margin-bottom:8px">每週 Refine 會議</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  ⚔️ PO 和工程師意見不一致，僵在那裡
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;margin-bottom:8px;color:#993C1D">
+                    TPM 的角色：把假設說清楚、把風險量化、讓 PO 做最終決定——不是你來決定
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 1：問工程師量化風險</strong><br>「如果這樣做，最壞的情況是什麼？影響多少使用者？」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 2：翻譯給 PO</strong><br>「如果現在這樣做，X% 的使用者可能會 YYY，這個風險你可以接受嗎？」
+                    </div>
+                    <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9;color:#993C1D">
+                      ⚠️ 客製化提示：公司文化決定 TPM 介入的深度，有些公司 TPM 有更強的決策權
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  😵 討論內容你完全聽不懂
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;margin-bottom:8px;color:#993C1D">
+                    說不懂比假裝聽懂更專業。任何時候都可以說「我不懂」
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">方式一（最推薦）：拉回使用者影響層面</strong><br>「等一下，我想確認——這個決定對使用者的影響是什麼？技術細節我先跳過，但我需要知道結果。」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">方式二：先記關鍵詞，會議後再問</strong><br>把聽不懂的詞記下來，會議後問：「你剛才說的 XXX，對我們的目標最重要的差別是什麼？」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">方式三：會議後請工程師補課</strong><br>「我今天有一段完全沒跟上，你可以用非技術的語言幫我解釋一下我們做了什麼決定嗎？」
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  🚫 工程師說「這個需求做不到」
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;margin-bottom:8px;color:#993C1D">
+                    「做不到」通常有三種意思：技術上真的不行（很少）、成本太高（最常見）、這樣做不對（工程師在表達意見）
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 1：澄清「做不到」的意思</strong><br>「你說做不到，是技術上不可能，還是成本太高？如果是成本問題，大概要多少時間？」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 2：澄清需求背後的目的</strong><br>「你需要這個功能，最重要的原因是什麼？」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 3：找中間解法</strong><br>找到滿足真正需求的最低成本解法，提給 PO 決定
+                    </div>
+                    <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9;color:#993C1D">
+                      ⚠️ 客製化提示：技術可行性評估需要一定的領域知識，必要時可以找另一個工程師確認
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+            </div>
+          </div>
+
+          <!-- 遇到問題 -->
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#712B13;padding:.4rem .75rem;background:#F5C4B3;border-radius:6px;margin-bottom:8px">遇到問題 / 主管問你</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  ⚡ 假設被驗證是錯的，但 PM 不接受
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;margin-bottom:8px;color:#993C1D">
+                    你的工作不是阻止 PM 做決定，而是確保他在有完整資訊的情況下做決定
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 1：先理解 PM 的考量，不要正面衝突</strong><br>「你覺得他們最後會習慣的原因是什麼？有沒有類似的案例？」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 2：量化風險，讓 PM 做有資訊的決定</strong><br>「如果繼續照計畫做，最壞的情況是三個月後系統做完沒人用。我想確保你是在知道這個風險的情況下做決定。」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 3：提出降低風險的方案</strong><br>「我們可以先做一個很小的版本，找兩個人試用一個月。這樣就算假設是錯的，也只損失一個月。」
+                    </div>
+                    <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9;color:#993C1D">
+                      決定做了之後：把風險和 PM 的考量記進邏輯地圖，標注「PM 知情後決定繼續推進」
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+            </div>
+          </div>
+
+          <!-- 突發狀況 -->
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#712B13;padding:.4rem .75rem;background:#F5C4B3;border-radius:6px;margin-bottom:8px">突發狀況</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  🔁 專案中途被要求大改方向
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 1：重寫「一句話說清楚這個專案」</strong><br>如果連這句話都要大改，代表整個方向都變了，後面每個假設都要重新審查
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 2：逐一審查每個核心假設</strong><br>✅ 還成立｜❌ 已被推翻｜⚠️ 需要重新驗證
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 3：審查每個功能的設計邏輯</strong><br>功能可能還在，但「為什麼這樣設計」的理由已經不對了，需要重寫
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 4：找 PM/主管重新做 Kickoff 問題</strong><br>針對改變的部分重新對齊成功定義和 timeline
+                    </div>
+                    <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9;color:#993C1D">
+                      ❌ 最容易犯的錯：只更新功能列表，忘記更新核心假設<br>
+                      ⚠️ 客製化提示：改變幅度決定哪些 Step 需要完整重做
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  🏠 你不在的時候有人做了重大決定
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 1：先問工程師</strong>（決定了什麼、技術影響是什麼）<br>「我不在的時候做了哪些決定？對現在開發影響最大的是哪一個？」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 2：自己看會議記錄</strong>（如果有，先自己讀完）
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 3：再問 PO</strong>（為什麼這樣決定）<br>「我看到你們決定 XXX，我想了解一下背後的考量。」
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 4：更新邏輯地圖</strong><br>特別標注「你不在時決定的」：⚠️ XXX（你不在時決定）- 原因是 YYY - 待確認影響
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 5：才去找主管確認剩下不清楚的</strong><br>這時你已經有足夠背景，問題會更精準
+                    </div>
+                    <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9;color:#993C1D">
+                      ❌ 最容易犯的錯：一回來就直接找主管問「我不在發生了什麼」（問題太模糊）
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  📂 同時負責多個專案，記錄混在一起
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">預防：每個專案獨立的邏輯地圖檔案</strong><br>logic_map/HBM3E_dashboard.md<br>logic_map/DDR5_test_case.md
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">預防：流水帳每條都要加專案標籤</strong><br>✅ 【HBM3E】週一 10am - Kevin 回報 pass rate 94%<br>❌「週一 - Kevin 說進度還好」（不知道是哪個專案）
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">已經混了的急救：</strong><br>請 AI 從流水帳裡抽出特定專案的內容：「幫我從以下記錄裡，只抽出 HBM3E 相關的內容」
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  🔗 一個 bug 同時影響兩個專案
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;margin-bottom:8px;color:#993C1D">
+                    你能看到單一工程師看不到的跨專案連動——這是多專案 TPM 最有價值的地方
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 1：分別打開兩個邏輯地圖，找到各自受影響的假設</strong>
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 2：判斷是否同根本原因</strong><br>是 → 先找根本原因，再一起解決<br>否 → 分開處理，按嚴重性排優先順序
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 3：跟主管說清楚連動關係</strong><br>「今天有兩個問題，可能是同一個根本原因，我正在確認。如果是的話，解決一個就解決兩個。」
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  🔗 一個假設被推翻，連鎖反應
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;margin-bottom:8px;color:#993C1D">
+                    一個假設倒下，可能帶倒一排。不要只更新被推翻的那個，要往上往下都追一遍
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 1：標注被推翻的假設</strong>，記下為什麼
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 2：往下追</strong>——哪些假設依賴這個假設？一個一個更新狀態
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 3：往上追</strong>——這個假設的錯誤，會不會影響「為什麼要做這個專案」？
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">Step 4：跟 PM 說清楚連鎖影響</strong><br>「假設 A 被推翻了，所以 B、C、D 也需要重新確認，可能影響 Phase 1 的範圍和 timeline。」
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+            </div>
+          </div>
+
+          <!-- 邏輯地圖維護 -->
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#712B13;padding:.4rem .75rem;background:#F5C4B3;border-radius:6px;margin-bottom:8px">邏輯地圖維護</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  📝 Kickoff 訪談後建立邏輯地圖初版
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      Kickoff 訪談結束 → 把原始筆記存進 kickoff.md → 貼進「建立初版 Prompt」→ AI 產出邏輯地圖 → 你審閱確認 → 存進 report.md → 建立空白 log.md 等下週開始記
+                    </div>
+                    <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9;color:#993C1D">
+                      ⚠️ 客製化提示：專案類型影響哪些欄位最重要（硬體 vs 軟體 vs 流程改善）
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  🔄 週五用流水帳更新邏輯地圖
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      這週流水帳 + 現有邏輯地圖 → 貼進「每週更新 Prompt」→ AI 更新有變動的部分，標注「本週更新」→ 你審閱 → 存回 repo
+                    </div>
+                    <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9;color:#993C1D">
+                      ⚠️ 客製化提示：如果這週沒有 refine 或沒有重大決定，可以跳過更新
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  🚪 新 PM 加入，用邏輯地圖幫她快速了解專案
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      「這是我維護的專案邏輯地圖，你可以先看一遍，然後我們花 30 分鐘對齊。」→ 特別確認「待確認」欄位 → 趁機重新量化成功定義
+                    </div>
+                    <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9;color:#993C1D">
+                      ⚠️ 客製化提示：新 PM 的背景決定需要解釋多少技術細節
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details>
+                <summary style="font-size:12px;font-weight:600;color:#712B13;cursor:pointer;padding:.6rem .875rem;background:white;border:1px solid #F0997B;border-radius:8px;list-style:none" onclick="event.stopPropagation()">
+                  📦 邏輯地圖越來越大，難以維護
+                </summary>
+                <div style="background:white;border:1px solid #F0997B;border-radius:0 0 8px 8px;border-top:none;padding:.875rem 1rem;font-size:11px;color:var(--text-secondary)" onclick="event.stopPropagation()">
+                  <div style="background:#FEF0EA;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;margin-bottom:8px;color:#993C1D">
+                    基準：邏輯地圖應該讓新加入的人在 15 分鐘內了解現在最重要的事
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">精簡時機一：功能上線後</strong> → 保留結論，刪掉討論過程
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">精簡時機二：假設被驗證後</strong> → 更新狀態，縮短描述
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">精簡時機三：方向大改後</strong> → 舊內容移到「歷史記錄」，不要刪
+                    </div>
+                    <div style="background:#F1EFE8;border:1px solid #F0997B;border-radius:7px;padding:.6rem .875rem;line-height:1.9">
+                      <strong style="color:#712B13">用 AI 幫你精簡：</strong><br>「以下是我的邏輯地圖，請幫我判斷哪些可以移到歷史記錄、哪些可以刪掉、哪些必須留著。判斷標準：讓新加入的人在 15 分鐘內了解現在最重要的事。【貼上邏輯地圖】」
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+            </div>
+          </div>
+
+        </div>
+      </div>`
+  }
+];
+
+const colorMap = {
+  purple: { border: '#C8C3F5', bg: '#EEEDFE', text: '#3C3489', hover: '#534AB7' },
+  green:  { border: '#B7D8C4', bg: '#E8F4EE', text: '#2D6A4F', hover: '#1D9E75' },
+  amber:  { border: '#F5C882', bg: '#FEF3E2', text: '#92540A', hover: '#BA7517' },
+  blue:   { border: '#8DC4EF', bg: '#E6F1FB', text: '#0C447C', hover: '#185FA5' },
+  coral:  { border: '#F0997B', bg: '#FAECE7', text: '#993C1D', hover: '#D85A30' }
+};
+
+function renderToolboxGrid() {
+  const grid = document.getElementById('toolbox-grid');
+  if (!grid) return;
+  grid.innerHTML = tools.map(tool => {
+    const c = colorMap[tool.color];
+    return `
+      <div onclick="openDetail('${tool.id}')"
+        style="background:${c.bg};border:0.5px solid ${c.border};border-radius:12px;padding:1rem 1.1rem;cursor:pointer;transition:border-color .15s,box-shadow .15s"
+        onmouseenter="this.style.borderColor='${c.hover}';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)'"
+        onmouseleave="this.style.borderColor='${c.border}';this.style.boxShadow='none'">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:32px;height:32px;border-radius:8px;background:${c.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="font-size:18px;line-height:1">${tool.icon}</span>
+          </div>
+          <span style="font-size:10px;font-weight:500;color:${c.text};background:${c.bg};padding:2px 7px;border-radius:999px;border:0.5px solid ${c.border}">${tool.category}</span>
+        </div>
+        <div style="font-size:13px;font-weight:500;color:#1A1714;margin-bottom:4px;line-height:1.4">${tool.title}</div>
+        <div style="font-size:11px;color:#9C9486;line-height:1.5">${tool.subtitle}</div>
+      </div>`;
+  }).join('');
+}
+
+function openDetail(id) {
+  const tool = tools.find(t => t.id === id);
+  if (!tool) return;
+  const c = colorMap[tool.color];
+  document.getElementById('detail-title').innerHTML =
+    `<span style="display:inline-flex;align-items:center;gap:8px">
+      <span style="font-size:18px;line-height:1">${tool.icon}</span>
+      ${tool.title}
+    </span>`;
+  document.getElementById('detail-content').innerHTML = tool.content;
+  const detail = document.getElementById('toolbox-detail');
+  detail.style.display = 'block';
+  detail.style.borderColor = c.border;
+  detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeDetail() {
+  document.getElementById('toolbox-detail').style.display = 'none';
+}
+
+renderToolboxGrid();
+
+// Collapsible weakness items
+// Collapsible weakness items
+document.querySelectorAll('.weakness-tracker-item').forEach(item => {
+  item.addEventListener('click', () => {
+    item.classList.toggle('open');
+  });
+});
+
+// Collapsible tool cards
+document.querySelectorAll('.tool-card').forEach(card => {
+  card.addEventListener('click', (e) => {
+    card.classList.toggle('open');
+  });
+});
+
+const container = document.getElementById('curriculum');
+curriculum.forEach(week => {
+  const section = document.createElement('div');
+  section.className = 'week-section';
+  section.innerHTML = `<div class="week-title">${week.week}</div><div class="week-desc">${week.weekDesc}</div>`;
+  week.days.forEach(day => {
+    section.appendChild(buildCard(day));
+    if (day.milestone) {
+      const m = document.createElement('div');
+      m.className = 'milestone';
+      m.textContent = '🚩 ' + day.milestone;
+      section.appendChild(m);
+    }
+  });
+  container.appendChild(section);
+});
+</script>
+</body>
+</html>

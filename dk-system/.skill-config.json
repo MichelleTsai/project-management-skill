@@ -1,0 +1,7 @@
+{
+  "trigger_on_new_project": true,
+  "default_mode": "pre_questionnaire",
+  "auto_save_kickoff": false,
+  "questionnaire_path": "dk-system/kickoff_full_questionnaire.md",
+  "templates_path": "dk-system/templates/"
+}
